@@ -3,8 +3,9 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Starting Frontend Neon PostgreSQL seed...')
+  console.log('🌱 Starting Neon PostgreSQL seed...')
 
+  // ─── 1. Career Categories ────────────────────────────────────────────────
   const catTech = await prisma.careerCategory.upsert({
     where: { slug: 'technology' },
     update: {},
@@ -41,6 +42,18 @@ async function main() {
     },
   })
 
+  const catBus = await prisma.careerCategory.upsert({
+    where: { slug: 'business' },
+    update: {},
+    create: {
+      name: 'Business & Management',
+      slug: 'business',
+      description: 'Entrepreneurship, management, and business operations',
+      iconName: 'Briefcase',
+      orderIndex: 4,
+    },
+  })
+
   const catFin = await prisma.careerCategory.upsert({
     where: { slug: 'finance' },
     update: {},
@@ -53,6 +66,45 @@ async function main() {
     },
   })
 
+  const catLaw = await prisma.careerCategory.upsert({
+    where: { slug: 'law' },
+    update: {},
+    create: {
+      name: 'Law & Legal',
+      slug: 'law',
+      description: 'Legal practice, corporate law, and justice systems',
+      iconName: 'Scale',
+      orderIndex: 6,
+    },
+  })
+
+  const catDesign = await prisma.careerCategory.upsert({
+    where: { slug: 'design' },
+    update: {},
+    create: {
+      name: 'Design & Architecture',
+      slug: 'design',
+      description: 'UI/UX design, visual graphics, architecture, and creative media',
+      iconName: 'Palette',
+      orderIndex: 7,
+    },
+  })
+
+  const catGov = await prisma.careerCategory.upsert({
+    where: { slug: 'government' },
+    update: {},
+    create: {
+      name: 'Government & Public Service',
+      slug: 'government',
+      description: 'Civil services, public administration, and governance',
+      iconName: 'Landmark',
+      orderIndex: 8,
+    },
+  })
+
+  console.log('✅ Created Career Categories')
+
+  // ─── 2. Careers Seed Data ─────────────────────────────────────────────────
   const careersData = [
     {
       name: 'Software Developer',
@@ -111,6 +163,63 @@ async function main() {
       isFeatured: true,
       orderIndex: 3,
     },
+    {
+      name: 'Mechanical Engineer',
+      slug: 'mechanical-engineer',
+      categoryId: catEng.id,
+      shortDescription: 'Design, manufacture, and maintain machines, engines, robotics, and physical systems.',
+      fullDescription: 'Mechanical engineers design and analyze mechanical devices, automotive systems, robotics, energy systems, and manufacturing machinery.',
+      relevantStreams: ['SCIENCE_PCM', 'DIPLOMA_ENGINEERING'],
+      requiredEducation: ['10th Standard', '12th with PCM or Diploma in Mechanical', 'B.Tech / B.E. in Mechanical Engineering'],
+      durationToQualify: '4 Years after 12th',
+      workEnvironment: 'Manufacturing Plants, Automotive R&D Labs, Design Offices',
+      whoMightEnjoy: 'Students who love physics, machinery, automobiles, robotics, and hands-on tinkering.',
+      alternativeRoutes: ['3-Year Polytechnic Diploma in Mechanical Engineering'],
+      skills: ['CAD Design', 'Thermodynamics', 'Material Science', 'Robotics'],
+      toolsUsed: ['AutoCAD', 'SolidWorks', 'ANSYS'],
+      pros: ['Versatile engineering field', 'Opportunities in EV & aerospace', 'Practical field work'],
+      challenges: ['Requires physical & mathematical rigour', 'Initial factory floor postings'],
+      isFeatured: false,
+      orderIndex: 4,
+    },
+    {
+      name: 'Lawyer / Advocate',
+      slug: 'lawyer-advocate',
+      categoryId: catLaw.id,
+      shortDescription: 'Represent clients in court, draft legal contracts, and provide legal advice.',
+      fullDescription: 'Advocates represent individuals and corporate entities in civil, criminal, corporate, and constitutional matters.',
+      relevantStreams: ['ARTS_HUMANITIES', 'COMMERCE_WITH_MATH', 'SCIENCE_PCM'],
+      requiredEducation: ['10th Standard', '12th Standard in any stream', 'CLAT / Entrance Exam for 5-Year Integrated B.A. LL.B / B.B.A. LL.B', 'Bar Council Enrollment'],
+      durationToQualify: '5 Years after 12th',
+      workEnvironment: 'Courts, Corporate Law Firms, Consulting Offices',
+      whoMightEnjoy: 'Students with strong public speaking, reading comprehension, debate, and analytical skills.',
+      alternativeRoutes: ['3-Year LL.B after any 3-Year Bachelor Degree'],
+      skills: ['Legal Research', 'Argumentation & Debating', 'Contract Drafting', 'Public Speaking'],
+      toolsUsed: ['SCC Online', 'Manupatra', 'Legal Databases'],
+      pros: ['High prestige & social standing', 'Diverse options (Corporate, Constitutional, IP Law)'],
+      challenges: ['Extensive reading requirements', 'Challenging initial litigation practice years'],
+      isFeatured: true,
+      orderIndex: 5,
+    },
+    {
+      name: 'Civil Services Officer (UPSC)',
+      slug: 'civil-services-officer',
+      categoryId: catGov.id,
+      shortDescription: 'Serve in IAS, IPS, IFS, or IRS leading district administration and public policy.',
+      fullDescription: 'Civil Services Officers manage government administration, maintain law and order, formulate policies, and execute national development projects.',
+      relevantStreams: ['ARTS_HUMANITIES', 'COMMERCE_WITH_MATH', 'SCIENCE_PCM', 'SCIENCE_PCB'],
+      requiredEducation: ['10th Standard', '12th Standard in any stream', 'Bachelor Degree in any discipline', 'Pass UPSC Civil Services Examination (Prelims, Mains, Interview)'],
+      durationToQualify: '3 Years Degree + UPSC prep',
+      workEnvironment: 'Government Headquarters, District Administration Offices',
+      whoMightEnjoy: 'Students passionate about nation building, public service, governance, and leadership.',
+      alternativeRoutes: ['State Public Service Commission Exams (State PSC)'],
+      skills: ['Public Administration', 'Policy Analysis', 'Leadership', 'General Studies & Current Affairs'],
+      toolsUsed: ['Government Portals', 'Policy Frameworks'],
+      pros: ['Unmatched social impact & authority', 'Job security & perks', 'Nationwide service scope'],
+      challenges: ['Highly competitive selection rate', 'Frequent administrative transfers'],
+      isFeatured: true,
+      orderIndex: 6,
+    },
   ]
 
   for (const c of careersData) {
@@ -121,6 +230,9 @@ async function main() {
     })
   }
 
+  console.log('✅ Created Careers Dataset')
+
+  // ─── 3. Pathways Seed Data ────────────────────────────────────────────────
   const pathwaysData = [
     {
       name: 'Science (PCM) Pathway',
@@ -160,6 +272,63 @@ async function main() {
       ],
       orderIndex: 2,
     },
+    {
+      name: 'Commerce Stream Pathway',
+      slug: 'commerce-with-math',
+      stream: 'COMMERCE_WITH_MATH',
+      shortDescription: 'Accountancy, Economics, Business Studies stream.',
+      difficultyLevel: 'MODERATE',
+      duration: '2 Years (11th & 12th)',
+      keySubjects: ['Accountancy', 'Business Studies', 'Economics', 'Mathematics / Informatics', 'English'],
+      entranceExams: ['CA Foundation', 'CUET', 'IPMAT (IIM Integrated Management)'],
+      higherEducationOptions: ['B.Com (Hons)', 'BBA', 'CA / CMA / CS', 'B.Sc Economics'],
+      commonCareers: ['Chartered Accountant', 'Financial Analyst', 'Entrepreneur', 'Banker'],
+      steps: [
+        { title: 'Step 1: 10th Completion', description: 'Clear 10th with interest in social & financial concepts.' },
+        { title: 'Step 2: 11th & 12th Commerce', description: 'Master Accountancy, Economics, and Math.' },
+        { title: 'Step 3: Professional Registrations', description: 'Register for CA Foundation or IPMAT.' },
+        { title: 'Step 4: Higher Studies', description: 'Pursue B.Com, BBA, or CA qualifications.' },
+      ],
+      orderIndex: 3,
+    },
+    {
+      name: 'Arts & Humanities Pathway',
+      slug: 'arts-humanities',
+      stream: 'ARTS_HUMANITIES',
+      shortDescription: 'History, Political Science, Sociology, Psychology stream.',
+      difficultyLevel: 'MODERATE',
+      duration: '2 Years (11th & 12th)',
+      keySubjects: ['History', 'Political Science', 'Sociology', 'Psychology', 'English', 'Economics'],
+      entranceExams: ['CLAT (Law)', 'CUET (Central Varsities)', 'NID / NIFT (Design)'],
+      higherEducationOptions: ['B.A. Integrated Law (LL.B)', 'B.A. Humanities', 'B.Des', 'B.J.M.C. (Journalism)'],
+      commonCareers: ['Lawyer / Advocate', 'Civil Services Officer', 'Psychologist', 'Journalist'],
+      steps: [
+        { title: 'Step 1: 10th Completion', description: 'Develop strong reading and analytical writing habits.' },
+        { title: 'Step 2: 11th & 12th Arts', description: 'Choose Humanities subjects matching your interests.' },
+        { title: 'Step 3: Entrance Preparation', description: 'Prepare for CLAT, CUET, or Design entrance exams.' },
+        { title: 'Step 4: Degree Specialization', description: 'Pursue B.A. LL.B, B.Des, or B.A. Honors.' },
+      ],
+      orderIndex: 4,
+    },
+    {
+      name: 'Polytechnic Diploma Pathway',
+      slug: 'diploma-engineering',
+      stream: 'DIPLOMA_ENGINEERING',
+      shortDescription: '3-Year Polytechnic Technical Diploma directly after 10th standard.',
+      difficultyLevel: 'MODERATE',
+      duration: '3 Years after 10th',
+      keySubjects: ['Applied Physics', 'Applied Chemistry', 'Engineering Drawing', 'Branch Specialization'],
+      entranceExams: ['State Polytechnic Entrance Exams (e.g. POLYCET, JEECUP)'],
+      higherEducationOptions: ['Lateral Entry to B.Tech 2nd Year (LEET)', 'Advanced Diplomas'],
+      commonCareers: ['Junior Engineer', 'Lab Technician', 'CAD Specialist', 'Maintenance Supervisor'],
+      steps: [
+        { title: 'Step 1: 10th Completion', description: 'Clear 10th standard board exam.' },
+        { title: 'Step 2: Polytechnic Admission', description: 'Qualify State Polytechnic Entrance Test.' },
+        { title: 'Step 3: 3-Year Diploma Course', description: 'Complete practical engineering diploma.' },
+        { title: 'Step 4: Job or B.Tech LEET', description: 'Start job as Junior Engineer or enter 2nd Year B.Tech.' },
+      ],
+      orderIndex: 5,
+    },
   ]
 
   for (const p of pathwaysData) {
@@ -170,6 +339,9 @@ async function main() {
     })
   }
 
+  console.log('✅ Created Pathways Dataset')
+
+  // ─── 4. Assessment Questions Seed ──────────────────────────────────────────
   const questionsData = [
     {
       questionText: 'How much do you enjoy solving complex logic puzzles, mathematical equations, or writing computer code?',
@@ -197,6 +369,58 @@ async function main() {
         '1': { HEALTHCARE: 0 },
       },
     },
+    {
+      questionText: 'How much do you enjoy reading business news, analyzing financial numbers, stock markets, or accounting rules?',
+      questionType: 'LIKERT',
+      category: 'FINANCE',
+      orderIndex: 3,
+      scoring: {
+        '5': { FINANCE: 25, BUSINESS: 15 },
+        '4': { FINANCE: 20, BUSINESS: 10 },
+        '3': { FINANCE: 10 },
+        '2': { FINANCE: 5 },
+        '1': { FINANCE: 0 },
+      },
+    },
+    {
+      questionText: 'How interested are you in legal rights, debates, constitutional laws, and defending cases in court?',
+      questionType: 'LIKERT',
+      category: 'LAW',
+      orderIndex: 4,
+      scoring: {
+        '5': { LAW: 25, SOCIAL_SCIENCE: 15 },
+        '4': { LAW: 20, SOCIAL_SCIENCE: 10 },
+        '3': { LAW: 10 },
+        '2': { LAW: 5 },
+        '1': { LAW: 0 },
+      },
+    },
+    {
+      questionText: 'How much do you enjoy sketching, visual designing, UI/UX, or creating aesthetic digital media?',
+      questionType: 'LIKERT',
+      category: 'DESIGN',
+      orderIndex: 5,
+      scoring: {
+        '5': { DESIGN: 25, MEDIA: 15 },
+        '4': { DESIGN: 20, MEDIA: 10 },
+        '3': { DESIGN: 10 },
+        '2': { DESIGN: 5 },
+        '1': { DESIGN: 0 },
+      },
+    },
+    {
+      questionText: 'How strongly do you feel about serving in public administration, government policy, or civil services (UPSC)?',
+      questionType: 'LIKERT',
+      category: 'GOVERNMENT',
+      orderIndex: 6,
+      scoring: {
+        '5': { GOVERNMENT: 25, SOCIAL_SCIENCE: 15 },
+        '4': { GOVERNMENT: 20, SOCIAL_SCIENCE: 10 },
+        '3': { GOVERNMENT: 10 },
+        '2': { GOVERNMENT: 5 },
+        '1': { GOVERNMENT: 0 },
+      },
+    },
   ]
 
   for (const q of questionsData) {
@@ -205,7 +429,47 @@ async function main() {
     })
   }
 
-  console.log('✅ Seed completed successfully!')
+  console.log('✅ Created Assessment Questions')
+
+  // ─── 5. Colleges (Sample Data) ──────────────────────────────────────────────
+  await prisma.college.create({
+    data: {
+      name: 'Indian Institute of Technology (IIT) Bombay [Demo]',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      type: 'IIT',
+      affiliation: 'Autonomous Institute of National Importance',
+      ranking: 1,
+      isDemoData: true,
+      courses: {
+        create: [
+          { name: 'B.Tech Computer Science & Engineering', degreeType: 'UNDERGRADUATE', duration: '4 Years', eligibility: '12th PCM + JEE Advanced' },
+          { name: 'B.Tech Mechanical Engineering', degreeType: 'UNDERGRADUATE', duration: '4 Years', eligibility: '12th PCM + JEE Advanced' },
+        ],
+      },
+    },
+  })
+
+  await prisma.college.create({
+    data: {
+      name: 'All India Institute of Medical Sciences (AIIMS) Delhi [Demo]',
+      city: 'New Delhi',
+      state: 'Delhi NCR',
+      type: 'AIIMS',
+      affiliation: 'Autonomous Medical Institute',
+      ranking: 1,
+      isDemoData: true,
+      courses: {
+        create: [
+          { name: 'MBBS (Bachelor of Medicine & Surgery)', degreeType: 'UNDERGRADUATE', duration: '5.5 Years', eligibility: '12th PCB + NEET-UG' },
+          { name: 'B.Sc (Hons) Nursing', degreeType: 'UNDERGRADUATE', duration: '4 Years', eligibility: '12th PCB' },
+        ],
+      },
+    },
+  })
+
+  console.log('✅ Created Demo Colleges')
+  console.log('🎉 Neon PostgreSQL Seed completed successfully!')
 }
 
 main()

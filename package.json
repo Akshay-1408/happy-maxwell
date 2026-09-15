@@ -1,13 +1,13 @@
 {
-  "name": "smartcareer",
-  "version": "0.1.0",
+  "name": "happy-maxwell",
+  "version": "1.0.0",
   "private": true,
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
@@ -63,10 +63,5 @@
     "tailwindcss": "^3.4.16",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
-  },
-  "allowScripts": {
-    "@prisma/client@5.22.0": true,
-    "@prisma/engines@5.22.0": true,
-    "prisma@5.22.0": true
   }
 }

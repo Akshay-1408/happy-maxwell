@@ -36,3 +36,8 @@ export const AssessmentResponseSchema = z.object({
     answerValue: z.string(),
   })),
 })
+
+export type RegisterInput = z.infer<typeof RegisterSchema>
+export type LoginInput = z.infer<typeof LoginSchema>
+export type StudentProfileInput = z.infer<typeof StudentProfileSchema>
+export type AssessmentResponseInput = z.infer<typeof AssessmentResponseSchema>

@@ -1,3 +1,5 @@
+// Prisma Schema configured for Neon Serverless PostgreSQL & Vercel deployment
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,6 +9,8 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+// ─── Auth Models (NextAuth / Auth.js) ────────────────────────────────────────
 
 model Account {
   id                String  @id @default(cuid())
@@ -75,6 +79,8 @@ enum UserRole {
   ADMIN
 }
 
+// ─── Student Profile ─────────────────────────────────────────────────────────
+
 model StudentProfile {
   id                     String   @id @default(cuid())
   userId                 String   @unique
@@ -98,6 +104,8 @@ model StudentProfile {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+// ─── Assessment ──────────────────────────────────────────────────────────────
 
 model Assessment {
   id          String   @id @default(cuid())
@@ -156,6 +164,8 @@ model AssessmentResult {
   @@index([userId])
 }
 
+// ─── Career & Taxonomy ───────────────────────────────────────────────────────
+
 model CareerCategory {
   id          String   @id @default(cuid())
   name        String   @unique
@@ -195,6 +205,8 @@ model Career {
   @@index([slug])
 }
 
+// ─── Pathway ─────────────────────────────────────────────────────────────────
+
 model Pathway {
   id                     String   @id @default(cuid())
   name                   String
@@ -211,6 +223,8 @@ model Pathway {
   orderIndex             Int      @default(0)
   isActive               Boolean  @default(true)
 }
+
+// ─── Colleges (Demo Data) ────────────────────────────────────────────────────
 
 model College {
   id          String   @id @default(cuid())
@@ -236,6 +250,8 @@ model Course {
 
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 }
+
+// ─── Saved Careers ───────────────────────────────────────────────────────────
 
 model SavedCareer {
   id        String   @id @default(cuid())
