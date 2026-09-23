@@ -1,15 +1,27 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Plus_Jakarta_Sans, DM_Sans } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ToastProvider } from '@/components/ui/toaster'
 import { SessionProviderWrapper } from '@/components/auth/session-provider'
 
-const inter = Inter({ subsets: ['latin'] })
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-jakarta',
+  display: 'swap',
+})
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-dm',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'SmartCareer - AI-Assisted Career Counseling After 10th Standard',
+  title: 'SmartCareer — AI-Assisted Career Counseling After 10th Standard',
   description: 'Discover the right education stream and career path after 10th standard based on academic performance, subject interests, aptitude, and goals.',
 }
 
@@ -19,10 +31,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className={`${plusJakartaSans.variable} ${dmSans.variable}`}>
+      <body className={`${plusJakartaSans.className} antialiased`}>
         <SessionProviderWrapper>
-          <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+          <div className="flex min-h-screen flex-col bg-[#0f0e17] text-slate-100">
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />
