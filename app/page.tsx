@@ -1,7 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import gsap from 'gsap'
+import { GsapReveal } from '@/components/animations/gsap-reveal'
+import { Spotlight } from '@/components/animations/spotlight'
 import {
   GraduationCap,
   ArrowRight,
@@ -19,6 +22,8 @@ import {
   Brain,
   TrendingUp,
   ChevronDown,
+  BookOpen,
+  Check,
 } from 'lucide-react'
 
 // ─── Data ───────────────────────────────────────────────────────────────────
@@ -94,16 +99,16 @@ const features = [
     link: '/compare',
     linkText: 'Open Comparison Matrix',
     gradient: 'from-indigo-500 to-violet-500',
-    glow: 'shadow-indigo-500/30',
+    glow: 'shadow-indigo-500/20',
   },
   {
     icon: Building2,
     title: 'College & Course Discovery',
-    desc: 'Explore 20+ premier Indian colleges (IITs, NITs, AIIMS, SRCC, Polytechnics) with real fees and entrance exams.',
+    desc: 'Explore 20+ premier Indian colleges (IITs, NITs, AIIMS, SRCC, Polytechnics) with verified fees and entrance exams.',
     link: '/colleges',
     linkText: 'Browse College Explorer',
     gradient: 'from-violet-500 to-purple-500',
-    glow: 'shadow-violet-500/30',
+    glow: 'shadow-violet-500/20',
   },
   {
     icon: HeartHandshake,
@@ -111,8 +116,8 @@ const features = [
     desc: 'Questions parents should ask, avoiding entrance exam burnout, and financial planning for higher education.',
     link: '/parents',
     linkText: 'Read Parent Guide',
-    gradient: 'from-rose-500 to-pink-500',
-    glow: 'shadow-rose-500/30',
+    gradient: 'from-cyan-500 to-blue-500',
+    glow: 'shadow-cyan-500/20',
   },
 ]
 
@@ -146,128 +151,110 @@ const stats = [
   { value: '100%', label: 'Free Forever', icon: Award },
 ]
 
-// ─── Scroll Reveal Hook ───────────────────────────────────────────────────────
-
-function useScrollReveal() {
-  const ref = useRef<HTMLDivElement>(null)
+export default function LandingPage() {
+  const heroRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const el = ref.current
+    const el = heroRef.current
     if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add('revealed')
-          observer.unobserve(el)
-        }
-      },
-      { threshold: 0.12 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) return
+
+    const ctx = gsap.context(() => {
+      gsap.from('.hero-headline', {
+        y: 40,
+        opacity: 0,
+        duration: 0.9,
+        ease: 'power3.out',
+      })
+      gsap.from('.hero-sub', {
+        y: 25,
+        opacity: 0,
+        duration: 0.8,
+        delay: 0.2,
+        ease: 'power3.out',
+      })
+      gsap.from('.hero-cta', {
+        y: 20,
+        opacity: 0,
+        duration: 0.7,
+        delay: 0.35,
+        ease: 'power3.out',
+      })
+      gsap.from('.hero-card', {
+        scale: 0.93,
+        opacity: 0,
+        duration: 1,
+        delay: 0.25,
+        ease: 'power2.out',
+      })
+    }, el)
+
+    return () => ctx.revert()
   }, [])
 
-  return ref
-}
-
-// ─── FAQ Item ──────────────────────────────────────────────────────────────────
-
-function FaqItem({ faq, idx }: { faq: { q: string; a: string }; idx: number }) {
-  const ref = useScrollReveal()
-  const [open, setOpen] = useState(false)
-
   return (
-    <div
-      ref={ref}
-      className="reveal glass-card rounded-2xl overflow-hidden cursor-pointer group"
-      style={{ transitionDelay: `${idx * 60}ms` }}
-      onClick={() => setOpen((v) => !v)}
-    >
-      <div className="flex items-start justify-between gap-4 p-5">
-        <h3 className="text-[15px] font-semibold text-slate-200 leading-snug">{faq.q}</h3>
-        <ChevronDown
-          className={`h-5 w-5 text-indigo-400 shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
-        />
-      </div>
-      {open && (
-        <div className="px-5 pb-5 text-sm text-slate-400 leading-relaxed border-t border-white/[0.04] pt-4 animate-fade-in-up">
-          {faq.a}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Main Page ─────────────────────────────────────────────────────────────────
-
-export default function LandingPage() {
-  const statsRef = useScrollReveal()
-  const pathwaysRef = useScrollReveal()
-  const featuresRef = useScrollReveal()
-  const faqRef = useScrollReveal()
-
-  return (
-    <div className="relative overflow-x-hidden">
+    <div className="relative overflow-x-hidden bg-[#090a0f]">
+      {/* Ambient background glows */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-gradient-to-b from-indigo-600/15 via-violet-600/8 to-transparent blur-[140px] pointer-events-none rounded-full" />
+      <div className="absolute top-[30%] right-[-10%] w-[500px] h-[500px] bg-cyan-600/10 blur-[130px] pointer-events-none rounded-full" />
 
       {/* ── Hero Section ─────────────────────────────────────────── */}
-      <section className="relative min-h-[92vh] flex items-center overflow-hidden">
-        {/* Blob backgrounds */}
-        <div className="blob blob-1 w-[600px] h-[600px] -top-32 -left-32" />
-        <div className="blob blob-2 w-[500px] h-[500px] top-20 -right-24" />
-        <div className="blob blob-3 w-[400px] h-[400px] bottom-0 left-1/3" />
-
-        {/* Subtle grid overlay */}
+      <section ref={heroRef} className="relative min-h-[90vh] flex items-center overflow-hidden py-16 lg:py-24">
+        {/* Subtle grid pattern */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
           style={{
-            backgroundImage: `linear-gradient(rgba(99,102,241,0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(99,102,241,0.5) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)`,
+            backgroundSize: '48px 48px',
           }}
         />
 
-        <div className="relative container mx-auto px-4 sm:px-6 py-20 z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="relative container mx-auto px-4 sm:px-6 z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
             {/* Left Content */}
             <div className="space-y-8">
               {/* Badge pill */}
-              <div className="opacity-0 animate-fade-in-up animation-delay-100 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-semibold">
-                <Sparkles className="h-4 w-4 animate-pulse" />
-                AI-Assisted Career Platform for Indian Students
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold shadow-inner">
+                <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                <span>AI-Assisted Career Intelligence for 10th Standard</span>
               </div>
 
               {/* Headline */}
-              <div className="opacity-0 animate-fade-in-up animation-delay-200 space-y-2">
-                <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.05] text-white">
+              <div className="hero-headline space-y-3">
+                <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-[1.08] text-white">
                   What Should You Do{' '}
-                  <br className="hidden sm:block" />
-                  <span className="gradient-text">After 10th Standard?</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400">
+                    After 10th Standard?
+                  </span>
                 </h1>
               </div>
 
               {/* Sub-headline */}
-              <p className="opacity-0 animate-fade-in-up animation-delay-300 text-[17px] text-slate-400 max-w-lg leading-relaxed font-body">
-                Stop guessing your stream. Analyze your academic marks, subject interests, aptitude, and career goals to get{' '}
-                <span className="text-slate-200 font-semibold">explainable, data-driven recommendations.</span>
+              <p className="hero-sub text-[16px] sm:text-[18px] text-slate-400 max-w-xl leading-relaxed">
+                Stop guessing your stream. Analyze your academic marks, subject interests, aptitude, and career goals with{' '}
+                <span className="text-slate-200 font-semibold">transparent, data-backed guidance.</span>
               </p>
 
               {/* CTAs */}
-              <div className="opacity-0 animate-fade-in-up animation-delay-400 flex flex-col sm:flex-row gap-3">
+              <div className="hero-cta flex flex-col sm:flex-row gap-3 pt-2">
                 <Link href="/assessment">
-                  <button className="relative group flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-bold text-white btn-gradient overflow-hidden">
-                    <Sparkles className="h-4 w-4 relative z-10" />
-                    <span className="relative z-10">Start Career Assessment</span>
-                    <ArrowRight className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform duration-200" />
+                  <button className="btn-gradient flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl text-[14px] font-bold text-white shadow-xl shadow-indigo-500/20 group">
+                    <Sparkles className="h-4 w-4 text-indigo-200" />
+                    <span>Start Free Assessment</span>
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
                   </button>
                 </Link>
                 <Link href="/careers">
-                  <button className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-semibold text-slate-300 border border-white/10 hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-white transition-all duration-300">
+                  <button className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-semibold text-slate-300 bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white transition-all duration-200">
                     Explore 30+ Careers
                   </button>
                 </Link>
                 <Link href="/counselor">
-                  <button className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[15px] font-semibold text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all duration-200">
+                  <button className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-[14px] font-semibold text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all duration-200">
                     <MessageSquare className="h-4 w-4" />
                     AI Counselor
                   </button>
@@ -275,82 +262,75 @@ export default function LandingPage() {
               </div>
 
               {/* Trust indicators */}
-              <div className="opacity-0 animate-fade-in-up animation-delay-500 flex flex-wrap items-center gap-5 text-[13px] text-slate-500">
-                {['30-Question Assessment', 'Multi-Factor Scoring', '100% Free'].map((item) => (
-                  <span key={item} className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+              <div className="flex flex-wrap items-center gap-6 text-[13px] text-slate-400 pt-2">
+                {['30-Question Aptitude Engine', 'Multi-Factor Scoring', '100% Free Forever'].map((item) => (
+                  <span key={item} className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                     {item}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Right — Decision Engine Card */}
-            <div className="opacity-0 animate-fade-in-up animation-delay-400 animate-float">
-              <div className="glass-card rounded-3xl p-7 space-y-5 gradient-border relative">
+            {/* Right — Decision Engine Simulation Card */}
+            <div className="hero-card relative">
+              <div className="glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/[0.08] relative overflow-hidden shadow-2xl shadow-black/80">
+                <Spotlight fill="rgba(99, 102, 241, 0.22)" />
+
                 {/* Card header */}
-                <div className="flex items-center justify-between">
+                <div className="relative z-10 flex items-center justify-between pb-4 border-b border-white/[0.06]">
                   <div>
-                    <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-1">Decision Engine</p>
-                    <h3 className="text-lg font-bold text-white">SmartCareer Analysis</h3>
+                    <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">Multi-Factor Engine</span>
+                    <h3 className="text-lg font-extrabold text-white">SmartCareer Assessment Fit</h3>
                   </div>
-                  <div className="h-10 w-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-inner">
                     <Brain className="h-5 w-5 text-indigo-400" />
                   </div>
                 </div>
 
                 {/* Inputs flow */}
-                <div className="space-y-2">
+                <div className="relative z-10 space-y-3">
                   {[
-                    { label: '10th Marks', value: 'Baseline Academic Score', pct: 20 },
-                    { label: 'Subject Interest', value: 'Science & Math Aptitude', pct: 30 },
-                    { label: 'Career Goals', value: 'Engineering / Technology', pct: 15 },
-                    { label: 'Personality Fit', value: 'Analytical & Creative', pct: 10 },
+                    { label: '10th Academics', value: 'Math (88%), Science (92%)', pct: 20, color: 'from-indigo-500 to-indigo-600' },
+                    { label: 'Subject Interest', value: 'Coding, Physics & Robotics', pct: 30, color: 'from-violet-500 to-purple-600' },
+                    { label: 'Career Goals', value: 'Tech / Software Engineering', pct: 15, color: 'from-cyan-500 to-blue-600' },
+                    { label: 'Personality Fit', value: 'Analytical & Structured', pct: 10, color: 'from-emerald-500 to-teal-600' },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-3">
-                      <div className="w-28 shrink-0">
-                        <p className="text-[11px] font-semibold text-slate-400">{item.label}</p>
-                        <p className="text-[10px] text-slate-600 truncate">{item.value}</p>
+                    <div key={item.label} className="space-y-1.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-semibold text-slate-300">{item.label}</span>
+                        <span className="text-[11px] text-slate-500">{item.value}</span>
                       </div>
-                      <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-[#090b12] rounded-full overflow-hidden border border-white/[0.04]">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+                          className={`h-full rounded-full bg-gradient-to-r ${item.color}`}
                           style={{ width: `${item.pct * 3.3}%` }}
                         />
                       </div>
-                      <span className="text-[11px] font-bold text-indigo-300 w-8 text-right">{item.pct}%</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Result */}
-                <div className="rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 p-4 space-y-3">
+                {/* Result Preview Box */}
+                <div className="relative z-10 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-[#0e1220] to-[#121729] border border-indigo-500/25 p-4 space-y-3 shadow-lg">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-white">Top Stream Match</span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
-                      88% Fit Score
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Top Stream Match</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      89% Fit Score
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">⚛️</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20">⚛️</span>
                     <div>
-                      <p className="text-[14px] font-bold text-white">Science (PCM)</p>
-                      <p className="text-[11px] text-slate-400">JEE → B.Tech → Software Engineer</p>
+                      <p className="text-[15px] font-bold text-white">Science (PCM)</p>
+                      <p className="text-[12px] text-slate-400">JEE Main/Adv → B.Tech → AI / Software</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                    <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
-                    <span>₹8–25 LPA · <span className="text-emerald-400 font-semibold">High Demand</span></span>
+                  <div className="flex items-center justify-between text-[11px] pt-1 border-t border-white/[0.04] text-slate-400">
+                    <span>Est. Starting CTC: <span className="text-emerald-400 font-bold">₹8 - 24 LPA</span></span>
+                    <span className="text-indigo-400 font-semibold">High Growth Outlook</span>
                   </div>
-                </div>
-
-                {/* Floating badges */}
-                <div className="flex flex-wrap gap-2">
-                  {['Explains WHY', '6-Month Roadmap', 'Entrance Exams'].map((tag) => (
-                    <span key={tag} className="px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-[11px] font-medium text-slate-400">
-                      {tag}
-                    </span>
-                  ))}
                 </div>
               </div>
             </div>
@@ -360,123 +340,177 @@ export default function LandingPage() {
       </section>
 
       {/* ── Stats Bar ────────────────────────────────────────────── */}
-      <div ref={statsRef} className="reveal border-y border-white/[0.06] glass">
-        <div className="container mx-auto px-4 sm:px-6 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, i) => (
-              <div
-                key={stat.label}
-                className="flex items-center gap-3 group"
-                style={{ transitionDelay: `${i * 80}ms` }}
-              >
-                <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors duration-200">
-                  <stat.icon className="h-5 w-5 text-indigo-400" />
+      <GsapReveal animation="fade-in">
+        <div className="border-y border-white/[0.07] bg-[#0c0e17]/80 backdrop-blur-xl">
+          <div className="container mx-auto px-4 sm:px-6 py-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {stats.map((stat) => (
+                <div key={stat.label} className="flex items-center gap-3.5 group">
+                  <div className="h-11 w-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center group-hover:border-indigo-400/40 transition-colors">
+                    <stat.icon className="h-5 w-5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-black text-white tracking-tight leading-none">{stat.value}</p>
+                    <p className="text-xs text-slate-400 mt-1">{stat.label}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-extrabold gradient-text-static leading-none">{stat.value}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{stat.label}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </GsapReveal>
 
       {/* ── Pathways Grid ─────────────────────────────────────────── */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="blob blob-1 w-[400px] h-[400px] top-10 -right-32 opacity-10" />
-
-        <div className="container mx-auto px-4 sm:px-6 space-y-12">
-          {/* Section header */}
-          <div ref={pathwaysRef} className="reveal text-center max-w-2xl mx-auto space-y-4">
+      <section className="relative py-24 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 space-y-14">
+          <GsapReveal animation="fade-up" className="text-center max-w-2xl mx-auto space-y-3">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-bold uppercase tracking-wider">
               <Compass className="h-3.5 w-3.5" />
-              Education Streams
+              Stream Directory
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
-              Explore Pathways <span className="gradient-text">After 10th</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
+              Explore Pathways <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">After 10th</span>
             </h2>
             <p className="text-slate-400 text-[15px] leading-relaxed">
-              Understand subjects, difficulty levels, and career outcomes for all primary Indian educational streams.
+              Understand subject combinations, difficulty levels, and career outcomes for all primary Indian educational streams.
             </p>
-          </div>
+          </GsapReveal>
 
-          {/* Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {streams.map((s, idx) => (
-              <StreamCard key={idx} stream={s} idx={idx} />
+              <GsapReveal key={idx} animation="fade-up" delay={idx * 0.08}>
+                <div
+                  className={`glass-card rounded-2xl p-6 flex flex-col gap-4 border border-white/[0.07] h-full ${s.borderColor}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className={`text-3xl p-3 rounded-2xl bg-gradient-to-br ${s.gradient} border border-white/5`}>
+                      {s.icon}
+                    </div>
+                    <span className={`text-[11px] font-bold uppercase tracking-wider ${s.accentColor} bg-white/[0.03] px-2.5 py-1 rounded-md border border-white/[0.06]`}>
+                      Stream
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <h3 className="text-[17px] font-bold text-white">{s.name}</h3>
+                    <p className="text-[13px] text-slate-400 leading-relaxed">{s.desc}</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {s.careers.map((c, i) => (
+                      <span
+                        key={i}
+                        className="px-2.5 py-0.5 rounded-md text-[11px] font-medium text-slate-300 bg-[#0b0e18] border border-white/[0.06]"
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+
+                  <Link href={s.link} className="mt-auto pt-2">
+                    <button
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-[13px] font-semibold border border-white/[0.08] hover:border-indigo-500/40 hover:bg-indigo-500/10 text-slate-200 hover:text-white transition-all group`}
+                    >
+                      <span>Explore Stream Guide</span>
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+                    </button>
+                  </Link>
+                </div>
+              </GsapReveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* ── Features Bento Grid ───────────────────────────────────── */}
-      <section className="py-20 border-t border-white/[0.06]">
-        <div className="container mx-auto px-4 sm:px-6 space-y-12">
-          <div ref={featuresRef} className="reveal text-center max-w-xl mx-auto space-y-4">
+      <section className="py-24 border-t border-white/[0.07] relative">
+        <div className="container mx-auto px-4 sm:px-6 space-y-14">
+          <GsapReveal animation="fade-up" className="text-center max-w-xl mx-auto space-y-3">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-bold uppercase tracking-wider">
               <Zap className="h-3.5 w-3.5" />
-              Platform Features
+              Platform Capabilities
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
               Everything You Need to{' '}
-              <span className="gradient-text">Decide Confidently</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">Decide Confidently</span>
             </h2>
-          </div>
+          </GsapReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {features.map((f, idx) => (
-              <FeatureCard key={idx} feature={f} idx={idx} />
+              <GsapReveal key={idx} animation="fade-up" delay={idx * 0.1}>
+                <div className="glass-card rounded-2xl p-6 flex flex-col gap-4 h-full border border-white/[0.07] hover:border-indigo-500/30">
+                  <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center shadow-lg ${f.glow}`}>
+                    <f.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h3 className="text-[17px] font-bold text-white">{f.title}</h3>
+                    <p className="text-[13px] text-slate-400 leading-relaxed">{f.desc}</p>
+                  </div>
+                  <Link
+                    href={f.link}
+                    className="mt-auto flex items-center gap-1.5 text-[13px] font-semibold text-indigo-400 hover:text-indigo-300 transition-colors pt-2"
+                  >
+                    {f.linkText}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </GsapReveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────────── */}
-      <section className="py-20 border-t border-white/[0.06]">
+      <section className="py-24 border-t border-white/[0.07]">
         <div className="container mx-auto px-4 sm:px-6 max-w-3xl space-y-10">
-          <div ref={faqRef} className="reveal text-center space-y-3">
+          <GsapReveal animation="fade-up" className="text-center space-y-3">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Frequently Asked <span className="gradient-text">Questions</span>
+              Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Questions</span>
             </h2>
-            <p className="text-slate-500 text-[14px]">Common questions about post-10th stream selection and assessment.</p>
-          </div>
+            <p className="text-slate-400 text-[14px]">Common questions about post-10th stream selection and assessment.</p>
+          </GsapReveal>
 
           <div className="space-y-3">
             {faqs.map((faq, idx) => (
-              <FaqItem key={idx} faq={faq} idx={idx} />
+              <GsapReveal key={idx} animation="fade-up" delay={idx * 0.05}>
+                <FaqAccordionItem faq={faq} />
+              </GsapReveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* ── Bottom CTA ────────────────────────────────────────────── */}
-      <section className="py-20 border-t border-white/[0.06]">
-        <div className="container mx-auto px-4 sm:px-6 text-center space-y-8 max-w-2xl">
-          <div className="space-y-4">
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white leading-tight">
-              Ready to Find Your{' '}
-              <span className="gradient-text">Perfect Path?</span>
+      <section className="py-24 border-t border-white/[0.07] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-950/20 to-transparent pointer-events-none" />
+        <div className="container mx-auto px-4 sm:px-6 text-center space-y-8 max-w-2xl relative z-10">
+          <GsapReveal animation="fade-up" className="space-y-3">
+            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+              Ready to Discover Your{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400">Ideal Pathway?</span>
             </h2>
             <p className="text-slate-400 text-[16px] leading-relaxed">
               Take the free 30-question assessment and get an explainable, personalized stream recommendation in minutes.
             </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/assessment">
-              <button className="group flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-[16px] font-bold text-white btn-gradient">
-                <Sparkles className="h-5 w-5" />
-                Start Free Assessment
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-              </button>
-            </Link>
-            <Link href="/counselor">
-              <button className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-[16px] font-semibold text-slate-300 border border-white/10 hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-white transition-all duration-300">
-                <MessageSquare className="h-5 w-5" />
-                Chat with AI Counselor
-              </button>
-            </Link>
-          </div>
+          </GsapReveal>
+          <GsapReveal animation="fade-up" delay={0.15}>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/assessment">
+                <button className="btn-gradient flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-[15px] font-bold text-white shadow-xl shadow-indigo-500/25">
+                  <Sparkles className="h-5 w-5 text-indigo-200" />
+                  <span>Start Free Assessment</span>
+                  <ArrowRight className="h-5 w-5" />
+                </button>
+              </Link>
+              <Link href="/counselor">
+                <button className="flex items-center justify-center gap-2 px-7 py-4 rounded-xl text-[15px] font-semibold text-slate-300 bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white transition-all">
+                  <MessageSquare className="h-5 w-5 text-indigo-400" />
+                  <span>Chat with AI Counselor</span>
+                </button>
+              </Link>
+            </div>
+          </GsapReveal>
         </div>
       </section>
 
@@ -484,81 +518,27 @@ export default function LandingPage() {
   )
 }
 
-// ─── Stream Card Sub-component ─────────────────────────────────────────────────
-
-function StreamCard({ stream, idx }: { stream: typeof streams[0]; idx: number }) {
-  const ref = useScrollReveal()
+function FaqAccordionItem({ faq }: { faq: { q: string; a: string } }) {
+  const [open, setOpen] = useState(false)
 
   return (
     <div
-      ref={ref}
-      className={`reveal glass-card rounded-2xl p-6 flex flex-col gap-4 border border-white/[0.06] transition-all duration-300 cursor-default ${stream.borderColor}`}
-      style={{ transitionDelay: `${idx * 80}ms` }}
+      className="glass-card rounded-2xl overflow-hidden cursor-pointer border border-white/[0.07] transition-all"
+      onClick={() => setOpen((v) => !v)}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className={`text-3xl p-2.5 rounded-xl bg-gradient-to-br ${stream.gradient}`}>
-          {stream.icon}
+      <div className="flex items-center justify-between gap-4 p-5">
+        <h3 className="text-[15px] font-semibold text-slate-200 leading-snug">{faq.q}</h3>
+        <ChevronDown
+          className={`h-4 w-4 text-indigo-400 shrink-0 transition-transform duration-300 ${
+            open ? 'rotate-180' : ''
+          }`}
+        />
+      </div>
+      {open && (
+        <div className="px-5 pb-5 text-sm text-slate-400 leading-relaxed border-t border-white/[0.04] pt-4">
+          {faq.a}
         </div>
-        <span className={`text-xs font-semibold ${stream.accentColor} opacity-60 mt-1`}>Stream</span>
-      </div>
-
-      {/* Title & Description */}
-      <div className="space-y-1.5">
-        <h3 className="text-[16px] font-bold text-white">{stream.name}</h3>
-        <p className="text-[13px] text-slate-400 leading-relaxed">{stream.desc}</p>
-      </div>
-
-      {/* Career tags */}
-      <div className="flex flex-wrap gap-1.5">
-        {stream.careers.map((c, i) => (
-          <span
-            key={i}
-            className="px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-400 bg-white/[0.04] border border-white/[0.06]"
-          >
-            {c}
-          </span>
-        ))}
-      </div>
-
-      {/* CTA */}
-      <Link href={stream.link} className="mt-auto">
-        <button
-          className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-[13px] font-semibold border border-white/[0.08] hover:border-current ${stream.accentColor} hover:bg-white/5 transition-all duration-200 group`}
-        >
-          <span>Explore Stream Guide</span>
-          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
-        </button>
-      </Link>
-    </div>
-  )
-}
-
-// ─── Feature Card Sub-component ──────────────────────────────────────────────
-
-function FeatureCard({ feature, idx }: { feature: typeof features[0]; idx: number }) {
-  const ref = useScrollReveal()
-
-  return (
-    <div
-      ref={ref}
-      className="reveal glass-card rounded-2xl p-6 flex flex-col gap-4 group hover:scale-[1.02] transition-all duration-300"
-      style={{ transitionDelay: `${idx * 100}ms` }}
-    >
-      <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-lg ${feature.glow}`}>
-        <feature.icon className="h-6 w-6 text-white" />
-      </div>
-      <div className="space-y-1.5">
-        <h3 className="text-[16px] font-bold text-white">{feature.title}</h3>
-        <p className="text-[13px] text-slate-400 leading-relaxed">{feature.desc}</p>
-      </div>
-      <Link
-        href={feature.link}
-        className="mt-auto flex items-center gap-1.5 text-[13px] font-semibold text-indigo-400 hover:text-indigo-300 group-hover:gap-2.5 transition-all duration-200"
-      >
-        {feature.linkText}
-        <ArrowRight className="h-3.5 w-3.5" />
-      </Link>
+      )}
     </div>
   )
 }

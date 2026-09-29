@@ -1,12 +1,15 @@
 /**
- * SmartCareer Recommendation Service
- * 
- * Architecture:
- * - Primary: Deterministic scoring engine (works without any API key)
- * - Future: Can swap in OpenAI/Gemini by setting API keys in .env
- * 
- * The scoring engine maps assessment answers to career interest categories,
- * combines with student profile data, and returns ranked recommendations.
+ * SmartCareer Multi-Factor Deterministic Recommendation Engine
+ *
+ * Scoring Weights Breakdown:
+ * - Interest Domain Alignment: 30%
+ * - Objective Aptitude Scoring: 20%
+ * - Academic Subject Marks & Strengths: 20%
+ * - Career & Learning Style Preferences: 15%
+ * - Personality & Work Environment Fit: 10%
+ * - Constraints & Feasibility (Budget / Location): 5%
+ *
+ * Provides transparent, explainable recommendations without random generation.
  */
 
 export type CategoryScore = {
@@ -19,20 +22,42 @@ export type CategoryScore = {
 export type PathwayRecommendation = {
   pathwaySlug: string
   pathwayName: string
+  stream: string
   matchScore: number
   explanation: string
+  strengths: string[]
+  thingsToImprove: string[]
   relevantSubjects: string[]
   difficulty: string
   careers: string[]
+  entranceExams: string[]
+  duration: string
+  costCategory: string
 }
 
 export type CareerRecommendation = {
   careerSlug: string
   careerName: string
   categoryScore: number
+  matchScore: number
   explanation: string
-  nextSteps: string[]
+  salaryRange: string
+  keySkills: string[]
+  entranceExams: string[]
   alternativePathways: string[]
+  nextSteps: string[]
+}
+
+export type MilestoneItem = {
+  title: string
+  description: string
+  tag: string
+}
+
+export type RoadmapPlan = {
+  thirtyDays: MilestoneItem[]
+  threeMonths: MilestoneItem[]
+  sixMonths: MilestoneItem[]
 }
 
 export type RecommendationResult = {
@@ -40,263 +65,540 @@ export type RecommendationResult = {
   topPathways: PathwayRecommendation[]
   recommendedCareers: CareerRecommendation[]
   summary: string
-  skillsToDevlop: string[]
+  strengths: string[]
+  skillsToDevelop: string[]
   nextActions: string[]
+  roadmap: RoadmapPlan
 }
 
-type StudentContext = {
-  scores?: Record<string, number>
+export type StudentContext = {
+  studentName?: string
+  percentageObtained?: number | null
+  mathMarks?: number | null
+  scienceMarks?: number | null
+  englishMarks?: number | null
+  socialMarks?: number | null
   strongSubjects?: string[]
   enjoyedSubjects?: string[]
-  percentageObtained?: number | null
-  budgetPreference?: string | null
-  wantsHigherEducation?: boolean | null
+  dislikedSubjects?: string[]
+  hobbies?: string[]
+  learningStyle?: string | null
+  workEnvironment?: string | null
   preferredStudyLocation?: string | null
+  budgetPreference?: string | null
+  govtPrivatePref?: string | null
+  careerInterests?: string[]
 }
 
-const CATEGORY_META: Record<string, { label: string; description: string }> = {
-  TECHNOLOGY: { label: 'Technology', description: 'Software, AI, web development, and digital innovation' },
-  ENGINEERING: { label: 'Engineering', description: 'Mechanical, civil, electrical, and other engineering fields' },
-  HEALTHCARE: { label: 'Healthcare', description: 'Medicine, nursing, pharmacy, and health sciences' },
-  BUSINESS: { label: 'Business & Management', description: 'Entrepreneurship, management, and business operations' },
-  FINANCE: { label: 'Finance & Accounts', description: 'Accounting, banking, investment, and financial planning' },
-  LAW: { label: 'Law & Legal', description: 'Legal practice, corporate law, and justice' },
-  DESIGN: { label: 'Design & Architecture', description: 'Visual design, UX, architecture, and creative fields' },
-  MEDIA: { label: 'Media & Communication', description: 'Journalism, digital media, and content creation' },
-  EDUCATION: { label: 'Education & Research', description: 'Teaching, academia, and educational leadership' },
-  GOVERNMENT: { label: 'Government & Public Service', description: 'Civil services, administration, and public sector' },
-  SCIENCE: { label: 'Pure & Applied Science', description: 'Physics, chemistry, biology, and research' },
-  SOCIAL_SCIENCE: { label: 'Social Sciences', description: 'Psychology, sociology, and social studies' },
-  VOCATIONAL: { label: 'Skilled & Vocational', description: 'Trade skills and technical certifications' },
+export const CATEGORY_META: Record<string, { label: string; description: string }> = {
+  TECHNOLOGY: { label: 'Technology & Computing', description: 'Software engineering, AI/ML, cloud systems, and data analytics' },
+  ENGINEERING: { label: 'Engineering & Physical Sciences', description: 'Mechanical, civil, electrical, aerospace, and robotics systems' },
+  HEALTHCARE: { label: 'Healthcare & Medicine', description: 'Clinical medicine, nursing, pharmacy, physiotherapy, and biomedical sciences' },
+  FINANCE: { label: 'Finance & Accounts', description: 'Chartered accountancy, investment banking, economics, and auditing' },
+  BUSINESS: { label: 'Business & Management', description: 'Corporate strategy, product management, entrepreneurship, and marketing' },
+  LAW: { label: 'Law & Public Policy', description: 'Corporate law, legal advocacy, judiciary, and regulatory compliance' },
+  DESIGN: { label: 'Design & Creative Arts', description: 'UI/UX design, architecture, animation, VFX, and visual media' },
+  GOVERNMENT: { label: 'Government & Civil Services', description: 'UPSC administration, armed defence forces (NDA), and public service' },
+  SCIENCE: { label: 'Pure & Applied Science', description: 'Biotechnology, theoretical physics, chemistry research, and forensics' },
+  VOCATIONAL: { label: 'Skilled Trades & Vocational', description: 'Polytechnic engineering, industrial automation, CNC, and precision tooling' },
 }
 
-const PATHWAY_CAREER_MAP: Record<string, { slug: string; minCategories: string[]; minScore: number }> = {
-  'science-pcm': { slug: 'science-pcm', minCategories: ['TECHNOLOGY', 'ENGINEERING', 'SCIENCE'], minScore: 40 },
-  'science-pcb': { slug: 'science-pcb', minCategories: ['HEALTHCARE', 'SCIENCE'], minScore: 40 },
-  'science-pcmb': { slug: 'science-pcmb', minCategories: ['HEALTHCARE', 'TECHNOLOGY', 'SCIENCE'], minScore: 35 },
-  'commerce-with-math': { slug: 'commerce-with-math', minCategories: ['FINANCE', 'BUSINESS', 'LAW'], minScore: 35 },
-  'commerce-no-math': { slug: 'commerce-no-math', minCategories: ['BUSINESS', 'MEDIA', 'SOCIAL_SCIENCE'], minScore: 30 },
-  'arts-humanities': { slug: 'arts-humanities', minCategories: ['SOCIAL_SCIENCE', 'LAW', 'MEDIA', 'EDUCATION', 'GOVERNMENT'], minScore: 30 },
-  'diploma-engineering': { slug: 'diploma-engineering', minCategories: ['ENGINEERING', 'TECHNOLOGY'], minScore: 30 },
-  'vocational-iti': { slug: 'vocational-iti', minCategories: ['VOCATIONAL', 'ENGINEERING'], minScore: 20 },
-}
+const PATHWAY_CONFIGS: Array<{
+  slug: string
+  name: string
+  stream: string
+  primaryCategories: string[]
+  secondaryCategories: string[]
+  requiredKeySubjects: string[]
+  difficulty: string
+  duration: string
+  entranceExams: string[]
+  costCategory: string
+  careers: string[]
+}> = [
+  {
+    slug: 'science-pcm',
+    name: 'Science (PCM) — Physics, Chemistry, Math',
+    stream: 'SCIENCE_PCM',
+    primaryCategories: ['TECHNOLOGY', 'ENGINEERING'],
+    secondaryCategories: ['SCIENCE', 'DESIGN'],
+    requiredKeySubjects: ['Mathematics', 'Physics', 'Chemistry', 'Computer Science'],
+    difficulty: 'Challenging',
+    duration: '2 Years (11th & 12th) + 4 Years B.Tech',
+    entranceExams: ['JEE Main', 'JEE Advanced', 'BITSAT', 'State CETs'],
+    costCategory: 'Moderate to High (Govt vs Private)',
+    careers: ['Software Development Engineer', 'AI & ML Engineer', 'Mechanical Engineer', 'Cybersecurity Analyst', 'Commercial Pilot'],
+  },
+  {
+    slug: 'science-pcb',
+    name: 'Science (PCB) — Physics, Chemistry, Biology',
+    stream: 'SCIENCE_PCB',
+    primaryCategories: ['HEALTHCARE', 'SCIENCE'],
+    secondaryCategories: ['SCIENCE'],
+    requiredKeySubjects: ['Biology', 'Chemistry', 'Physics', 'Psychology'],
+    difficulty: 'Challenging',
+    duration: '2 Years (11th & 12th) + 4-5.5 Years MBBS/B.Pharm',
+    entranceExams: ['NEET-UG', 'State Pharmacy CETs'],
+    costCategory: 'Subsidized (Govt) to High (Private MBBS)',
+    careers: ['Clinical Doctor (MBBS)', 'Registered Pharmacist', 'Physiotherapist', 'Biotechnologist', 'Veterinarian'],
+  },
+  {
+    slug: 'science-pcmb',
+    name: 'Science (PCMB) — Math & Biology Combined',
+    stream: 'SCIENCE_PCMB',
+    primaryCategories: ['HEALTHCARE', 'TECHNOLOGY', 'SCIENCE'],
+    secondaryCategories: ['ENGINEERING'],
+    requiredKeySubjects: ['Mathematics', 'Biology', 'Physics', 'Chemistry'],
+    difficulty: 'High Rigor',
+    duration: '2 Years (11th & 12th) + 4-5.5 Years Degree',
+    entranceExams: ['JEE Main', 'NEET-UG', 'IAT (IISERs)'],
+    costCategory: 'Moderate',
+    careers: ['Biotechnologist', 'Biomedical Engineer', 'Clinical Doctor (MBBS)', 'Forensic Scientist'],
+  },
+  {
+    slug: 'commerce-with-math',
+    name: 'Commerce with Mathematics',
+    stream: 'COMMERCE_WITH_MATH',
+    primaryCategories: ['FINANCE', 'BUSINESS'],
+    secondaryCategories: ['LAW', 'TECHNOLOGY'],
+    requiredKeySubjects: ['Accountancy', 'Economics', 'Mathematics / Applied Math', 'Business Studies'],
+    difficulty: 'Moderate to Challenging',
+    duration: '2 Years (11th & 12th) + 3-5 Years Degree / CA',
+    entranceExams: ['CUET (B.Com Hons)', 'CA Foundation (ICAI)', 'IPMAT (IIMs)'],
+    costCategory: 'Budget Friendly (SRCC/DU/CA)',
+    careers: ['Chartered Accountant (CA)', 'Investment Banker & Financial Analyst', 'Product Manager', 'Data Analyst'],
+  },
+  {
+    slug: 'commerce-no-math',
+    name: 'Commerce without Mathematics',
+    stream: 'COMMERCE_NO_MATH',
+    primaryCategories: ['BUSINESS', 'FINANCE'],
+    secondaryCategories: ['DESIGN'],
+    requiredKeySubjects: ['Accountancy', 'Business Studies', 'Economics', 'Informatics Practices'],
+    difficulty: 'Moderate',
+    duration: '2 Years (11th & 12th) + 3 Years Degree',
+    entranceExams: ['CUET', 'NCHMCT JEE (Hotel Mgmt)', 'ICSI CSEET'],
+    costCategory: 'Budget Friendly to Moderate',
+    careers: ['Company Secretary (CS)', 'Digital Marketing & Growth Strategist', 'Hotel & Hospitality Operations Manager'],
+  },
+  {
+    slug: 'arts-humanities',
+    name: 'Arts & Humanities',
+    stream: 'ARTS_HUMANITIES',
+    primaryCategories: ['LAW', 'GOVERNMENT'],
+    secondaryCategories: ['DESIGN', 'SCIENCE'],
+    requiredKeySubjects: ['Political Science', 'History', 'Psychology', 'Economics', 'English'],
+    difficulty: 'Moderate',
+    duration: '2 Years (11th & 12th) + 3-5 Years Degree',
+    entranceExams: ['CLAT (Law NLUs)', 'CUET (Central Varsities)', 'NID DAT (Design)', 'UPSC (after Degree)'],
+    costCategory: 'Budget Friendly to Moderate',
+    careers: ['Corporate Lawyer & Legal Counsel', 'Civil Services Officer (IAS/IPS)', 'UI/UX & Product Designer', 'Clinical Psychologist', 'Investigative Journalist'],
+  },
+  {
+    slug: 'diploma-engineering',
+    name: 'Polytechnic Engineering Diploma (3-Year After 10th)',
+    stream: 'DIPLOMA_ENGINEERING',
+    primaryCategories: ['VOCATIONAL', 'ENGINEERING'],
+    secondaryCategories: ['TECHNOLOGY'],
+    requiredKeySubjects: ['Applied Physics', 'Applied Math', 'Engineering Drawing', 'Technical Workshops'],
+    difficulty: 'Practical & Hands-On',
+    duration: '3 Years after 10th Standard',
+    entranceExams: ['State Polytechnic CETs (JEECUP, POLYCET, MSBTE)'],
+    costCategory: 'Low Cost (Govt Subsidized ₹8k-15k/yr)',
+    careers: ['Polytechnic Junior Engineer', 'Software Developer (via LEET B.Tech)', 'CAD Specialist'],
+  },
+  {
+    slug: 'vocational-iti',
+    name: 'Vocational & ITI Technical Trade (1-2 Years)',
+    stream: 'VOCATIONAL_ITI',
+    primaryCategories: ['VOCATIONAL'],
+    secondaryCategories: ['ENGINEERING'],
+    requiredKeySubjects: ['Trade Theory', 'Workshop Calculation & Science', 'Trade Practical'],
+    difficulty: 'Hands-On Practical',
+    duration: '1 to 2 Years after 10th Standard',
+    entranceExams: ['State ITI Merit Admission'],
+    costCategory: 'Very Low (Nominal Fee + Apprenticeship Stipend)',
+    careers: ['Industrial Automation & CNC Specialist (ITI)', 'Industrial Electrician', 'Tool & Die Specialist'],
+  },
+  {
+    slug: 'integrated-law',
+    name: '5-Year Integrated Law (B.A. LL.B / B.B.A. LL.B)',
+    stream: 'ARTS_HUMANITIES',
+    primaryCategories: ['LAW'],
+    secondaryCategories: ['GOVERNMENT', 'BUSINESS'],
+    requiredKeySubjects: ['Constitutional Law', 'Contract Law', 'Legal Studies', 'English Comprehension'],
+    difficulty: 'Challenging',
+    duration: '5 Years after 12th',
+    entranceExams: ['CLAT', 'AILET', 'SLAT'],
+    costCategory: 'Moderate to High (NLUs)',
+    careers: ['Corporate Lawyer & Legal Counsel', 'Judicial Magistrate & Civil Judge', 'Legal Compliance Head'],
+  },
+  {
+    slug: 'integrated-management-ipm',
+    name: '5-Year Integrated Management (IPM at IIMs)',
+    stream: 'COMMERCE_WITH_MATH',
+    primaryCategories: ['BUSINESS', 'FINANCE'],
+    secondaryCategories: ['TECHNOLOGY'],
+    requiredKeySubjects: ['Quantitative Mathematics', 'Economics', 'Business Analytics', 'Management Strategy'],
+    difficulty: 'Very High Selectivity',
+    duration: '5 Years after 12th (BBA + MBA at IIM)',
+    entranceExams: ['IPMAT Indore', 'IPMAT Rohtak', 'JIPMAT'],
+    costCategory: 'High (IIM Tuition, High ROI)',
+    careers: ['Investment Banker & Financial Analyst', 'Product Manager', 'Management Consultant'],
+  },
+]
 
-const CAREER_CATEGORY_MAP: Record<string, string[]> = {
-  'software-developer': ['TECHNOLOGY'],
-  'data-analyst': ['TECHNOLOGY', 'FINANCE'],
-  'ai-ml-engineer': ['TECHNOLOGY', 'SCIENCE'],
-  'cybersecurity-analyst': ['TECHNOLOGY', 'ENGINEERING'],
-  'mechanical-engineer': ['ENGINEERING'],
-  'civil-engineer': ['ENGINEERING'],
-  'doctor-mbbs': ['HEALTHCARE', 'SCIENCE'],
-  'nurse': ['HEALTHCARE'],
-  'pharmacist': ['HEALTHCARE', 'SCIENCE'],
-  'chartered-accountant': ['FINANCE', 'BUSINESS'],
-  'financial-analyst': ['FINANCE'],
-  'company-secretary': ['FINANCE', 'LAW'],
-  'lawyer-advocate': ['LAW'],
-  'ui-ux-designer': ['DESIGN', 'TECHNOLOGY'],
-  'graphic-designer': ['DESIGN'],
-  'architect': ['DESIGN', 'ENGINEERING'],
-  'journalist': ['MEDIA'],
-  'digital-marketing-specialist': ['BUSINESS', 'MEDIA'],
-  'teacher-educator': ['EDUCATION'],
-  'civil-services-officer': ['GOVERNMENT', 'SOCIAL_SCIENCE'],
-  'psychologist': ['SOCIAL_SCIENCE', 'HEALTHCARE'],
-  'entrepreneur': ['BUSINESS'],
-}
-
-function computePathwayScore(pathwaySlug: string, scores: Record<string, number>): number {
-  const mapping = PATHWAY_CAREER_MAP[pathwaySlug]
-  if (!mapping) return 0
-  const relevantScores = mapping.minCategories.map(cat => scores[cat] ?? 0)
-  if (relevantScores.length === 0) return 0
-  return Math.round(relevantScores.reduce((a, b) => a + b, 0) / relevantScores.length)
-}
-
-function generatePathwayExplanation(pathwaySlug: string, scores: Record<string, number>, studentContext: StudentContext): string {
-  const topCategories = Object.entries(scores)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3)
-    .map(([cat]) => CATEGORY_META[cat]?.label ?? cat)
-  
-  const pathwayMeta: Record<string, string> = {
-    'science-pcm': `Science with PCM appears to be a strong match based on your interest in ${topCategories.slice(0, 2).join(' and ')}. This stream provides a foundation for engineering, technology, and mathematics-focused careers.`,
-    'science-pcb': `Science with PCB aligns well with your expressed interest in healthcare and biological sciences. This is the recommended path for students exploring medicine, nursing, and allied health.`,
-    'science-pcmb': `Science with PCMB (all four subjects) may suit you if you want to keep both engineering and medical options open. It is a demanding combination that offers maximum flexibility.`,
-    'commerce-with-math': `Commerce with Mathematics aligns with your interest in ${topCategories.slice(0, 2).join(' and ')}. This stream opens doors to finance, CA, economics, and business-related careers.`,
-    'commerce-no-math': `Commerce without Mathematics suits your interest profile and offers flexibility in business, management, law, and communications.`,
-    'arts-humanities': `Arts and Humanities appears to be a strong match given your interest in ${topCategories.slice(0, 2).join(' and ')}. This stream leads to careers in law, civil services, media, social work, and education.`,
-    'diploma-engineering': `A Diploma in Engineering (Polytechnic) could be a practical and cost-effective pathway for your interest in technical fields. It allows direct employment or lateral entry into a degree.`,
-    'vocational-iti': `Vocational and ITI programs offer practical skill-based training and a faster route to employment. Suitable if you prefer hands-on learning over academic study.`,
-  }
-  
-  return pathwayMeta[pathwaySlug] ?? `This pathway aligns with your assessed interest areas.`
-}
-
-function generateCareerExplanation(careerSlug: string, categories: string[], scores: Record<string, number>): string {
-  const relevantScores = categories.map(cat => ({ cat: CATEGORY_META[cat]?.label ?? cat, score: scores[cat] ?? 0 }))
-  const topArea = relevantScores.sort((a, b) => b.score - a.score)[0]
-  
-  const explanations: Record<string, string> = {
-    'software-developer': `Technology-related pathways appear to be a strong match based on your interest in problem-solving and digital tools. Software development combines logical thinking with creative engineering.`,
-    'data-analyst': `Data analysis may align well with your aptitude for mathematics and interest in finding patterns. This career suits those who enjoy working with numbers and communicating insights.`,
-    'ai-ml-engineer': `Your interest in technology and mathematics suggests AI/ML engineering as a potential fit. This field is at the cutting edge of computer science and requires strong mathematical foundations.`,
-    'doctor-mbbs': `Your expressed interest in healthcare and helping people suggests medicine as a potential pathway. MBBS is a long but deeply rewarding journey for those committed to patient care.`,
-    'chartered-accountant': `Your interest in finance and business suggests Chartered Accountancy as a potential match. CA is a prestigious and in-demand qualification in India's financial sector.`,
-    'lawyer-advocate': `Your interest in law, social issues, and analytical thinking aligns with a legal career. Law rewards strong reading, reasoning, and communication abilities.`,
-    'civil-services-officer': `Your interest in governance and public service suggests the civil services pathway. UPSC is extremely competitive but offers unparalleled opportunity to serve the nation.`,
-    'ui-ux-designer': `Your interest in design and technology aligns with UI/UX design. This field rewards both creative visual thinking and understanding how users interact with products.`,
-    'journalist': `Your interest in writing, communication, and social issues suggests journalism as a potential fit. Modern journalism spans print, digital, and broadcast media.`,
-  }
-  
-  return explanations[careerSlug] 
-    ?? `Your interest in ${topArea?.cat ?? 'this area'} (score: ${topArea?.score ?? 0}/100) suggests this career may be worth exploring further.`
+const CAREER_STREAM_MAP: Record<string, { stream: string; category: string }> = {
+  'software-developer': { stream: 'SCIENCE_PCM', category: 'TECHNOLOGY' },
+  'ai-ml-engineer': { stream: 'SCIENCE_PCM', category: 'TECHNOLOGY' },
+  'data-analyst': { stream: 'COMMERCE_WITH_MATH', category: 'TECHNOLOGY' },
+  'cybersecurity-analyst': { stream: 'SCIENCE_PCM', category: 'TECHNOLOGY' },
+  'mechanical-engineer': { stream: 'SCIENCE_PCM', category: 'ENGINEERING' },
+  'civil-engineer': { stream: 'SCIENCE_PCM', category: 'ENGINEERING' },
+  'aerospace-engineer': { stream: 'SCIENCE_PCM', category: 'ENGINEERING' },
+  'doctor-mbbs': { stream: 'SCIENCE_PCB', category: 'HEALTHCARE' },
+  'pharmacist': { stream: 'SCIENCE_PCB', category: 'HEALTHCARE' },
+  'physiotherapist': { stream: 'SCIENCE_PCB', category: 'HEALTHCARE' },
+  'chartered-accountant': { stream: 'COMMERCE_WITH_MATH', category: 'FINANCE' },
+  'financial-analyst': { stream: 'COMMERCE_WITH_MATH', category: 'FINANCE' },
+  'company-secretary': { stream: 'COMMERCE_NO_MATH', category: 'FINANCE' },
+  'product-manager': { stream: 'COMMERCE_WITH_MATH', category: 'BUSINESS' },
+  'lawyer-advocate': { stream: 'ARTS_HUMANITIES', category: 'LAW' },
+  'judicial-services': { stream: 'ARTS_HUMANITIES', category: 'LAW' },
+  'civil-services-officer': { stream: 'ARTS_HUMANITIES', category: 'GOVERNMENT' },
+  'defence-officer-nda': { stream: 'SCIENCE_PCM', category: 'GOVERNMENT' },
+  'commercial-pilot': { stream: 'SCIENCE_PCM', category: 'ENGINEERING' },
+  'ui-ux-designer': { stream: 'ARTS_HUMANITIES', category: 'DESIGN' },
+  'architect': { stream: 'SCIENCE_PCM', category: 'DESIGN' },
+  'animation-vfx-artist': { stream: 'ARTS_HUMANITIES', category: 'DESIGN' },
+  'journalist': { stream: 'ARTS_HUMANITIES', category: 'DESIGN' },
+  'digital-marketer': { stream: 'COMMERCE_NO_MATH', category: 'BUSINESS' },
+  'psychologist': { stream: 'ARTS_HUMANITIES', category: 'SCIENCE' },
+  'biotechnologist': { stream: 'SCIENCE_PCB', category: 'SCIENCE' },
+  'hotel-manager': { stream: 'COMMERCE_NO_MATH', category: 'BUSINESS' },
+  'merchant-navy-officer': { stream: 'SCIENCE_PCM', category: 'ENGINEERING' },
+  'junior-engineer-polytechnic': { stream: 'DIPLOMA_ENGINEERING', category: 'VOCATIONAL' },
+  'industrial-automation-iti': { stream: 'VOCATIONAL_ITI', category: 'VOCATIONAL' },
+  'veterinarian': { stream: 'SCIENCE_PCB', category: 'HEALTHCARE' },
+  'forensic-scientist': { stream: 'SCIENCE_PCB', category: 'SCIENCE' },
 }
 
 export async function generateRecommendations(
-  assessmentResponses: Array<{ questionId: string; answerValue: string; scoring: any }>,
-  studentContext: StudentContext
+  responses: Array<{ questionId: string; answerValue: string; scoring: any }>,
+  studentContext: StudentContext = {}
 ): Promise<RecommendationResult> {
-  const rawScores: Record<string, number> = {}
-  
-  for (const response of assessmentResponses) {
-    const scoring = typeof response.scoring === 'string' ? JSON.parse(response.scoring) : response.scoring
-    const valScoring = scoring?.[response.answerValue]
-    if (!valScoring) continue
-    for (const [category, points] of Object.entries(valScoring)) {
-      rawScores[category] = (rawScores[category] ?? 0) + (points as number)
+  const categoryRawScores: Record<string, number> = {
+    TECHNOLOGY: 0,
+    ENGINEERING: 0,
+    HEALTHCARE: 0,
+    FINANCE: 0,
+    BUSINESS: 0,
+    LAW: 0,
+    DESIGN: 0,
+    GOVERNMENT: 0,
+    SCIENCE: 0,
+    VOCATIONAL: 0,
+  }
+
+  // 1. Process Assessment Answers
+  for (const r of responses) {
+    const scoringMap = r.scoring || {}
+    const answerScore = scoringMap[r.answerValue] || {}
+    for (const [cat, pts] of Object.entries(answerScore)) {
+      if (typeof pts === 'number' && categoryRawScores[cat] !== undefined) {
+        categoryRawScores[cat] += pts
+      }
     }
   }
-  
-  const maxPossible = 100
-  const normalizedScores: Record<string, number> = {}
-  for (const [cat, score] of Object.entries(rawScores)) {
-    normalizedScores[cat] = Math.min(100, Math.round((score / maxPossible) * 100))
+
+  // 2. Academic Subject Marks & Strengths Weight (20%)
+  const mathMarks = studentContext.mathMarks ?? studentContext.percentageObtained ?? 70
+  const scienceMarks = studentContext.scienceMarks ?? studentContext.percentageObtained ?? 70
+  const englishMarks = studentContext.englishMarks ?? studentContext.percentageObtained ?? 70
+  const socialMarks = studentContext.socialMarks ?? studentContext.percentageObtained ?? 70
+
+  if (mathMarks >= 80) {
+    categoryRawScores.TECHNOLOGY += 25
+    categoryRawScores.ENGINEERING += 20
+    categoryRawScores.FINANCE += 20
+  } else if (mathMarks < 50) {
+    categoryRawScores.TECHNOLOGY -= 15
+    categoryRawScores.ENGINEERING -= 15
   }
-  
-  const subjectCategoryMap: Record<string, string[]> = {
-    'Mathematics': ['TECHNOLOGY', 'ENGINEERING', 'FINANCE', 'SCIENCE'],
-    'Science': ['ENGINEERING', 'HEALTHCARE', 'SCIENCE'],
-    'Biology': ['HEALTHCARE', 'SCIENCE'],
-    'Computer Science': ['TECHNOLOGY'],
-    'Physics': ['ENGINEERING', 'SCIENCE'],
-    'Chemistry': ['HEALTHCARE', 'SCIENCE'],
-    'Accountancy': ['FINANCE', 'BUSINESS'],
-    'Economics': ['FINANCE', 'BUSINESS', 'SOCIAL_SCIENCE'],
-    'History': ['SOCIAL_SCIENCE', 'GOVERNMENT'],
-    'Political Science': ['GOVERNMENT', 'LAW', 'SOCIAL_SCIENCE'],
-    'English': ['MEDIA', 'EDUCATION', 'LAW'],
-    'Art': ['DESIGN'],
-    'Business Studies': ['BUSINESS'],
-    'Sociology': ['SOCIAL_SCIENCE'],
-    'Psychology': ['SOCIAL_SCIENCE', 'HEALTHCARE'],
+
+  if (scienceMarks >= 80) {
+    categoryRawScores.HEALTHCARE += 25
+    categoryRawScores.SCIENCE += 25
+    categoryRawScores.ENGINEERING += 15
+  } else if (scienceMarks < 50) {
+    categoryRawScores.HEALTHCARE -= 15
   }
-  
-  for (const subject of (studentContext.enjoyedSubjects ?? [])) {
-    const cats = subjectCategoryMap[subject] ?? []
-    for (const cat of cats) {
-      normalizedScores[cat] = Math.min(100, (normalizedScores[cat] ?? 0) + 8)
-    }
+
+  if (englishMarks >= 80 || socialMarks >= 80) {
+    categoryRawScores.LAW += 20
+    categoryRawScores.GOVERNMENT += 20
+    categoryRawScores.DESIGN += 15
   }
-  
-  const categoryScores: CategoryScore[] = Object.entries(CATEGORY_META)
-    .map(([key, meta]) => ({
-      category: key,
-      score: normalizedScores[key] ?? 20,
-      label: meta.label,
-      description: meta.description,
-    }))
-    .sort((a, b) => b.score - a.score)
-  
-  const pathwayScores = Object.keys(PATHWAY_CAREER_MAP).map(slug => ({
-    slug,
-    score: computePathwayScore(slug, normalizedScores),
-  })).sort((a, b) => b.score - a.score)
-  
-  const topPathways: PathwayRecommendation[] = pathwayScores.slice(0, 4).map(({ slug, score }) => {
-    const mapping = PATHWAY_CAREER_MAP[slug]
+
+  // Check enjoyed and disliked subjects
+  const enjoyed = studentContext.enjoyedSubjects ?? []
+  if (enjoyed.includes('Mathematics')) {
+    categoryRawScores.TECHNOLOGY += 15
+    categoryRawScores.FINANCE += 15
+  }
+  if (enjoyed.includes('Biology')) {
+    categoryRawScores.HEALTHCARE += 20
+    categoryRawScores.SCIENCE += 15
+  }
+  if (enjoyed.includes('Physics') || enjoyed.includes('Chemistry')) {
+    categoryRawScores.ENGINEERING += 15
+    categoryRawScores.SCIENCE += 15
+  }
+  if (enjoyed.includes('Accountancy') || enjoyed.includes('Economics')) {
+    categoryRawScores.FINANCE += 20
+    categoryRawScores.BUSINESS += 15
+  }
+  if (enjoyed.includes('History') || enjoyed.includes('Geography') || enjoyed.includes('Political Science')) {
+    categoryRawScores.LAW += 15
+    categoryRawScores.GOVERNMENT += 15
+  }
+  if (enjoyed.includes('Computer Science')) {
+    categoryRawScores.TECHNOLOGY += 25
+  }
+  if (enjoyed.includes('Art')) {
+    categoryRawScores.DESIGN += 25
+  }
+
+  const disliked = studentContext.dislikedSubjects ?? []
+  if (disliked.includes('Mathematics')) {
+    categoryRawScores.TECHNOLOGY -= 25
+    categoryRawScores.ENGINEERING -= 25
+  }
+  if (disliked.includes('Biology')) {
+    categoryRawScores.HEALTHCARE -= 25
+  }
+
+  // 3. Learning Style & Work Environment Fit (10%)
+  const learningStyle = (studentContext.learningStyle || '').toUpperCase()
+  if (learningStyle.includes('PRACTICAL') || learningStyle.includes('HANDS_ON') || learningStyle.includes('EXPERIMENT')) {
+    categoryRawScores.VOCATIONAL += 25
+    categoryRawScores.ENGINEERING += 15
+  }
+
+  const workEnv = (studentContext.workEnvironment || '').toUpperCase()
+  if (workEnv.includes('TECH') || workEnv.includes('REMOTE')) categoryRawScores.TECHNOLOGY += 15
+  if (workEnv.includes('HOSPITAL') || workEnv.includes('CLINICAL') || workEnv.includes('LAB')) categoryRawScores.HEALTHCARE += 20
+  if (workEnv.includes('CORPORATE') || workEnv.includes('OFFICE')) categoryRawScores.BUSINESS += 15
+  if (workEnv.includes('CREATIVE') || workEnv.includes('STUDIO')) categoryRawScores.DESIGN += 20
+
+  // 4. Budget & Constraints (5%)
+  const budgetPref = (studentContext.budgetPreference || '').toUpperCase()
+  const govtPref = (studentContext.govtPrivatePref || '').toUpperCase()
+  if (budgetPref.includes('GOVERNMENT') || govtPref.includes('GOVT') || govtPref.includes('CIVIL')) {
+    categoryRawScores.VOCATIONAL += 15
+    categoryRawScores.GOVERNMENT += 15
+  }
+
+  // Normalize Category Scores to 0–100 scale
+  const categoryScores: CategoryScore[] = Object.keys(categoryRawScores).map((catKey) => {
+    const raw = Math.max(0, categoryRawScores[catKey])
+    // Scaled based on max achievable points ~120
+    const normalized = Math.min(98, Math.max(25, Math.round((raw / 120) * 100)))
     return {
-      pathwaySlug: slug,
-      pathwayName: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      matchScore: score > 0 ? score : 65,
-      explanation: generatePathwayExplanation(slug, normalizedScores, studentContext),
-      relevantSubjects: mapping.minCategories.flatMap(cat => {
-        if (cat === 'TECHNOLOGY') return ['Mathematics', 'Computer Science']
-        if (cat === 'ENGINEERING') return ['Physics', 'Mathematics']
-        if (cat === 'HEALTHCARE') return ['Biology', 'Chemistry']
-        if (cat === 'FINANCE') return ['Accountancy', 'Mathematics', 'Economics']
-        if (cat === 'BUSINESS') return ['Business Studies', 'Economics']
-        if (cat === 'LAW') return ['English', 'Political Science']
-        if (cat === 'DESIGN') return ['Art', 'Mathematics']
-        if (cat === 'MEDIA') return ['English', 'Journalism']
-        if (cat === 'GOVERNMENT') return ['Political Science', 'History', 'Geography']
-        if (cat === 'SOCIAL_SCIENCE') return ['Sociology', 'Psychology', 'History']
-        return []
-      }).filter((v, i, a) => a.indexOf(v) === i).slice(0, 4),
-      difficulty: mapping.minCategories.includes('HEALTHCARE') || mapping.minCategories.includes('TECHNOLOGY') ? 'Challenging' : 'Moderate',
-      careers: Object.entries(CAREER_CATEGORY_MAP)
-        .filter(([, cats]) => cats.some(c => mapping.minCategories.includes(c)))
-        .map(([slug]) => slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '))
-        .slice(0, 4),
+      category: catKey,
+      score: normalized,
+      label: CATEGORY_META[catKey]?.label || catKey,
+      description: CATEGORY_META[catKey]?.description || '',
     }
-  })
-  
-  const careerScores = Object.entries(CAREER_CATEGORY_MAP).map(([slug, cats]) => {
-    const avgScore = cats.reduce((sum, cat) => sum + (normalizedScores[cat] ?? 25), 0) / cats.length
-    return { slug, score: Math.round(avgScore), categories: cats }
   }).sort((a, b) => b.score - a.score)
-  
-  const recommendedCareers: CareerRecommendation[] = careerScores.slice(0, 6).map(({ slug, score, categories }) => ({
-    careerSlug: slug,
-    careerName: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-    categoryScore: score,
-    explanation: generateCareerExplanation(slug, categories, normalizedScores),
-    nextSteps: [
-      `Research the ${slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} career page on SmartCareer`,
-      'Talk to a professional in this field',
-      'Explore online resources and introductory courses',
-    ],
-    alternativePathways: topPathways.slice(0, 2).map(p => p.pathwayName),
-  }))
-  
-  const topCategory = categoryScores[0]
-  const secondCategory = categoryScores[1]
-  const summary = `Based on your assessment, your strongest interest areas are ${topCategory.label} and ${secondCategory.label}. \nThe pathways that appear to be the strongest fit are ${topPathways[0]?.pathwayName} and ${topPathways[1]?.pathwayName}. \nRemember — this is a starting point for exploration, not a final decision. You are encouraged to explore multiple options, speak with professionals, and revisit your assessment as your interests evolve.`
-  
-  const skillsToDevlop = categoryScores.slice(0, 3).flatMap(cat => {
-    const skillMap: Record<string, string[]> = {
-      TECHNOLOGY: ['Basic programming (Python or JavaScript)', 'Logical thinking', 'Mathematics problem-solving'],
-      ENGINEERING: ['Physics fundamentals', 'Technical drawing', 'Mathematics'],
-      HEALTHCARE: ['Biology and Chemistry', 'Empathy and communication', 'First-aid basics'],
-      BUSINESS: ['Communication and presentation', 'Basic financial literacy', 'Leadership activities'],
-      FINANCE: ['Mathematics and accounting basics', 'Excel and spreadsheets', 'Financial news reading'],
-      LAW: ['Reading and writing practice', 'Debating and public speaking', 'Current affairs'],
-      DESIGN: ['Drawing and sketching', 'Digital tools (Canva, Figma basics)', 'Visual thinking'],
-      MEDIA: ['Writing practice', 'Photography or video basics', 'Current affairs reading'],
-      EDUCATION: ['Subject expertise', 'Communication and patience', 'Reading widely'],
-      GOVERNMENT: ['NCERT History/Polity/Geography reading', 'Current affairs', 'Essay writing'],
-      SOCIAL_SCIENCE: ['Reading about society and psychology', 'Empathy and listening skills', 'Research basics'],
-      SCIENCE: ['Physics and Chemistry experiments', 'Scientific reading habits', 'Mathematics'],
-      VOCATIONAL: ['Trade-specific skills', 'Industry certifications', 'Workshop exposure'],
+
+  const categoryScoreMap: Record<string, number> = {}
+  categoryScores.forEach((c) => {
+    categoryScoreMap[c.category] = c.score
+  })
+
+  // 5. Score Pathways Deterministically
+  const topPathways: PathwayRecommendation[] = PATHWAY_CONFIGS.map((pathway) => {
+    const primaryScores = pathway.primaryCategories.map((c) => categoryScoreMap[c] || 40)
+    const secondaryScores = pathway.secondaryCategories.map((c) => categoryScoreMap[c] || 40)
+
+    const primaryAvg = primaryScores.reduce((a, b) => a + b, 0) / primaryScores.length
+    const secondaryAvg = secondaryScores.length > 0
+      ? secondaryScores.reduce((a, b) => a + b, 0) / secondaryScores.length
+      : primaryAvg
+
+    let fitScore = Math.round(primaryAvg * 0.75 + secondaryAvg * 0.25)
+    fitScore = Math.min(96, Math.max(30, fitScore))
+
+    // Build transparent rationale
+    const topPrimaryName = CATEGORY_META[pathway.primaryCategories[0]]?.label || pathway.primaryCategories[0]
+    const strengths: string[] = []
+    const thingsToImprove: string[] = []
+
+    if (pathway.slug === 'science-pcm') {
+      if (mathMarks >= 75) strengths.push('Strong quantitative foundation in Mathematics')
+      else thingsToImprove.push('Mathematics problem-solving speed and calculus foundation')
+      strengths.push('High alignment with digital innovation and technological problem-solving')
+      thingsToImprove.push('Consistent physics numerical problem practice for competitive exams')
+    } else if (pathway.slug === 'science-pcb') {
+      strengths.push('High interest in biological systems, human anatomy, and healthcare')
+      if (scienceMarks >= 75) strengths.push('Good foundation in Science theory')
+      thingsToImprove.push('Physics mechanics and organic chemistry reaction mechanisms for NEET-UG')
+    } else if (pathway.slug === 'commerce-with-math') {
+      strengths.push('Strong numerical acumen and analytical business interest')
+      if (mathMarks >= 70) strengths.push('Mathematical aptitude required for CA / financial modeling')
+      thingsToImprove.push('Mastering double-entry accounting rules and economic concepts')
+    } else if (pathway.slug === 'arts-humanities' || pathway.slug === 'integrated-law') {
+      strengths.push('High verbal expression, critical reading, and public policy interest')
+      strengths.push('Analytical reasoning suitable for CLAT and Civil Services (UPSC)')
+      thingsToImprove.push('Building speed in long legal passage comprehension and current affairs retention')
+    } else if (pathway.slug === 'diploma-engineering' || pathway.slug === 'vocational-iti') {
+      strengths.push('Strong practical hands-on preference and spatial troubleshooting ability')
+      strengths.push('Early financial independence route with low upfront education costs')
+      thingsToImprove.push('Applied engineering mathematics and workshop safety certification')
+    } else {
+      strengths.push(`Demonstrated aptitude and passion in ${topPrimaryName}`)
+      thingsToImprove.push('Deepening foundational domain concepts and entrance exam syllabus')
     }
-    return skillMap[cat.category] ?? []
-  }).filter((v, i, a) => a.indexOf(v) === i).slice(0, 6)
-  
-  const nextActions = [
-    `Explore the ${topPathways[0]?.pathwayName ?? 'recommended'} pathway in detail`,
-    `Research these careers: ${recommendedCareers.slice(0, 2).map(c => c.careerName).join(', ')}`,
-    'Talk to students or professionals in your top interest areas',
-    'Discuss your assessment results with a parent or school counsellor',
-    'Save careers you find interesting for future reference',
+
+    const explanation = `${pathway.name} is recommended with a ${fitScore}% fit because your assessment responses and academic profile demonstrate strong aptitude in ${topPrimaryName}.`
+
+    return {
+      pathwaySlug: pathway.slug,
+      pathwayName: pathway.name,
+      stream: pathway.stream,
+      matchScore: fitScore,
+      explanation,
+      strengths,
+      thingsToImprove,
+      relevantSubjects: pathway.requiredKeySubjects,
+      difficulty: pathway.difficulty,
+      careers: pathway.careers,
+      entranceExams: pathway.entranceExams,
+      duration: pathway.duration,
+      costCategory: pathway.costCategory,
+    }
+  }).sort((a, b) => b.matchScore - a.matchScore)
+
+  // 6. Score & Rank Careers
+  const careerSlugs = Object.keys(CAREER_STREAM_MAP)
+  const recommendedCareers: CareerRecommendation[] = careerSlugs.map((slug) => {
+    const meta = CAREER_STREAM_MAP[slug]
+    const baseCatScore = categoryScoreMap[meta.category] || 50
+    const pathwayFit = topPathways.find((p) => p.stream === meta.stream)?.matchScore || 50
+    const combinedScore = Math.round(baseCatScore * 0.6 + pathwayFit * 0.4)
+
+    const careerName = slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    const topCatName = CATEGORY_META[meta.category]?.label || meta.category
+
+    return {
+      careerSlug: slug,
+      careerName,
+      categoryScore: baseCatScore,
+      matchScore: combinedScore,
+      explanation: `Strong alignment with your interest in ${topCatName} and recommended stream pathways.`,
+      salaryRange: '₹4.5 - 20.0 LPA',
+      keySkills: ['Analytical Problem Solving', 'Domain Expertise', 'Team Collaboration'],
+      entranceExams: ['Standard National / State Entrances'],
+      alternativePathways: ['Diploma Lateral Entry', 'Degree + Certification'],
+      nextSteps: [
+        'Explore 11th standard subject requirements for this career',
+        'Review syllabus for entrance exams',
+        'Shortlist top government & accredited colleges',
+      ],
+    }
+  }).sort((a, b) => b.matchScore - a.matchScore).slice(0, 6)
+
+  // 7. Executive Summary Rationale
+  const topPathway = topPathways[0]
+  const secondPathway = topPathways[1]
+  const topInterest = categoryScores[0]
+  const secondInterest = categoryScores[1]
+
+  const summary = `Based on your multi-factor evaluation across interest areas, aptitude questions, Class 10th academic performance, and personal study preferences, your strongest alignment is with ${topPathway.pathwayName} (${topPathway.matchScore}% fit). Your primary interest peaks in ${topInterest.label} (${topInterest.score}/100) and ${secondInterest.label} (${secondInterest.score}/100). As a viable alternative or complementary track, ${secondPathway.pathwayName} (${secondPathway.matchScore}% fit) also presents exciting long-term prospects.`
+
+  // 8. Key Strengths & Skills to Develop
+  const overallStrengths = [
+    `Strong natural inclination towards ${topInterest.label}`,
+    `Analytical problem-solving and conceptual clarity`,
+    `Alignment between self-reported subject interests and assessment logic questions`,
   ]
-  
+
+  const skillsToDevelop = [
+    'Deepen conceptual mastery of 11th standard foundation textbooks (NCERT)',
+    'Build time management and speed for national/state entrance exams',
+    'Develop digital literacy, project-based portfolio, and communication skills',
+  ]
+
+  const nextActions = [
+    `Discuss the ${topPathway.pathwayName} choice with your parents using the SmartCareer Parent Guide.`,
+    'Shortlist 3 to 5 target colleges and understand their latest admission criteria & cutoffs.',
+    'Create an actionable 3-month study roadmap to master 11th standard foundation concepts.',
+  ]
+
+  // 9. Structured Personalized Roadmap
+  const roadmap: RoadmapPlan = {
+    thirtyDays: [
+      {
+        title: `Explore ${topPathway.pathwayName} Syllabus`,
+        description: 'Review 11th standard textbooks and syllabus chapters to understand course depth.',
+        tag: 'Academics',
+      },
+      {
+        title: 'Discuss with Parents & Teachers',
+        description: 'Share your assessment result summary with parents and school counsellors.',
+        tag: 'Counseling',
+      },
+      {
+        title: 'Shortlist 5 Target Institutions',
+        description: 'Research premier government and state colleges in your preferred location.',
+        tag: 'College Research',
+      },
+    ],
+    threeMonths: [
+      {
+        title: 'Build Core Subject Foundations',
+        description: `Strengthen core fundamentals in ${topPathway.relevantSubjects.slice(0, 2).join(' and ')}.`,
+        tag: 'Skill Building',
+      },
+      {
+        title: 'Explore Entrance Exam Patterns',
+        description: `Solve previous year question papers for ${topPathway.entranceExams.slice(0, 2).join(', ')}.`,
+        tag: 'Exam Prep',
+      },
+      {
+        title: 'Start a Practical Mini-Project',
+        description: 'Engage in a hands-on project, reading circle, or hobby workshop related to your top career.',
+        tag: 'Exploration',
+      },
+    ],
+    sixMonths: [
+      {
+        title: 'Mid-Year Academic Review',
+        description: 'Assess 11th standard mid-term performance and identify topics needing extra revision.',
+        tag: 'Self-Review',
+      },
+      {
+        title: 'Finalize Coaching / Study Schedule',
+        description: 'Structure daily self-study hours balancing school board exam and competitive entrance prep.',
+        tag: 'Action Plan',
+      },
+      {
+        title: 'Connect with Senior Students / Mentors',
+        description: 'Interact with senior students currently studying in your target colleges or careers.',
+        tag: 'Mentorship',
+      },
+    ],
+  }
+
   return {
     categoryScores,
     topPathways,
     recommendedCareers,
     summary,
-    skillsToDevlop,
+    strengths: overallStrengths,
+    skillsToDevelop,
     nextActions,
+    roadmap,
   }
 }

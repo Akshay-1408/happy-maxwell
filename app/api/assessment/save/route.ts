@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/auth.config'
+import { getAuthenticatedUser } from '@/lib/auth/clerk-sync'
 import prisma from '@/lib/db/prisma'
 
 export async function POST(req: Request) {
   try {
-    const session = await auth()
+    const user = await getAuthenticatedUser()
     const { assessmentId, responses } = await req.json()
 
     if (!assessmentId || !Array.isArray(responses)) {
       return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 })
     }
 
-    if (session?.user?.id && assessmentId !== 'guest-session') {
+    if (user?.id && assessmentId !== 'guest-session') {
       for (const res of responses) {
         await prisma.assessmentResponse.upsert({
           where: {

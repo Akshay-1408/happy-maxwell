@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { QuestionCard } from '@/components/assessment/question-card'
 import { ProgressIndicator } from '@/components/assessment/progress-indicator'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles, AlertCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles, AlertCircle, LayoutGrid, Check } from 'lucide-react'
 
 export default function AssessmentPage() {
   const router = useRouter()
@@ -16,6 +16,7 @@ export default function AssessmentPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [showOverview, setShowOverview] = useState(false)
 
   useEffect(() => {
     async function initAssessment() {
@@ -51,11 +52,11 @@ export default function AssessmentPage() {
       localStorage.setItem(`assessment_answers_${assessmentId}`, JSON.stringify(updated))
     }
 
-    // Auto-advance if not on last question
+    // Auto-advance with smooth slight delay
     if (currentIndex < questions.length - 1) {
       setTimeout(() => {
         setCurrentIndex((prev) => prev + 1)
-      }, 300)
+      }, 350)
     }
   }
 
@@ -77,12 +78,11 @@ export default function AssessmentPage() {
       })
 
       const data = await res.json()
-      if (data && data.recommendedCareers) {
-        // Store result in sessionStorage for guest view or redirection
+      if (data && data.topPathways) {
         sessionStorage.setItem('latest_assessment_result', JSON.stringify(data))
         router.push('/results')
       } else {
-        setError('Failed to process assessment results.')
+        setError('Failed to process assessment recommendations.')
         setSubmitting(false)
       }
     } catch (err) {
@@ -96,7 +96,7 @@ export default function AssessmentPage() {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-4">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-        <p className="text-sm text-slate-600 font-medium">Preparing your career assessment...</p>
+        <p className="text-sm text-slate-600 font-medium">Loading 30-Question Career & Stream Assessment...</p>
       </div>
     )
   }
@@ -120,26 +120,72 @@ export default function AssessmentPage() {
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] : undefined
 
   return (
-    <div className="container mx-auto px-4 py-10 max-w-3xl space-y-8">
+    <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
       {/* Assessment Header */}
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
           <Sparkles className="h-3.5 w-3.5" />
-          <span>SmartCareer Assessment</span>
+          <span>Post-10th Stream & Career Assessment</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Career & Stream Alignment Test</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Career Alignment Test</h1>
         <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto">
-          Answer questions honestly. There are no right or wrong answers.
+          Assess your interest, aptitude, personality, and career scenarios to find your best stream after 10th.
         </p>
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress Bar & Jump Button */}
       {questions.length > 0 && (
-        <ProgressIndicator
-          current={answeredCount}
-          total={questions.length}
-          categoryLabel={currentQuestion?.category?.replace('_', ' ')}
-        />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
+            <span>Section: <strong>{currentQuestion?.category?.replace('_', ' ')}</strong></span>
+            <button
+              type="button"
+              onClick={() => setShowOverview(!showOverview)}
+              className="flex items-center gap-1 text-blue-600 hover:underline font-semibold"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>{showOverview ? 'Hide Grid' : 'Question Grid'} ({answeredCount}/{questions.length})</span>
+            </button>
+          </div>
+
+          <ProgressIndicator
+            current={answeredCount}
+            total={questions.length}
+            categoryLabel={currentQuestion?.category?.replace('_', ' ')}
+          />
+
+          {/* Collapsible Question Quick Jump Grid */}
+          {showOverview && (
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 animate-in fade-in duration-200">
+              <span className="text-xs font-bold text-slate-700 block">Jump to Question:</span>
+              <div className="grid grid-cols-6 sm:grid-cols-10 gap-1.5">
+                {questions.map((q, idx) => {
+                  const isAns = !!answers[q.id]
+                  const isCurrent = idx === currentIndex
+                  return (
+                    <button
+                      key={q.id}
+                      type="button"
+                      onClick={() => {
+                        setCurrentIndex(idx)
+                        setShowOverview(false)
+                      }}
+                      className={`h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${
+                        isCurrent
+                          ? 'bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-1'
+                          : isAns
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {isAns ? <Check className="h-3 w-3" /> : idx + 1}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Question Card */}
@@ -154,7 +200,7 @@ export default function AssessmentPage() {
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between max-w-2xl mx-auto pt-4">
+      <div className="flex items-center justify-between max-w-2xl mx-auto pt-2">
         <Button
           variant="outline"
           onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
@@ -165,25 +211,38 @@ export default function AssessmentPage() {
           Previous
         </Button>
 
-        {isLastQuestion ? (
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting || answeredCount < 5}
-            className="bg-blue-600 hover:bg-blue-700 gap-2 font-semibold text-xs sm:text-sm"
-          >
-            {submitting ? 'Calculating Guidance...' : 'Submit & View Guidance'}
-            <CheckCircle2 className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button
-            onClick={() => setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-            disabled={!currentAnswer || submitting}
-            className="bg-blue-600 hover:bg-blue-700 gap-2 text-xs"
-          >
-            Next Question
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {answeredCount >= 10 && !isLastQuestion && (
+            <Button
+              variant="ghost"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="text-xs text-slate-600 hover:text-blue-600"
+            >
+              Submit Early ({answeredCount}/{questions.length})
+            </Button>
+          )}
+
+          {isLastQuestion ? (
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting || answeredCount < 5}
+              className="bg-blue-600 hover:bg-blue-700 gap-2 font-bold text-xs sm:text-sm shadow-md"
+            >
+              {submitting ? 'Generating Career Profile...' : 'Submit & View Guidance Report'}
+              <CheckCircle2 className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+              disabled={submitting}
+              className="bg-blue-600 hover:bg-blue-700 gap-2 text-xs font-semibold"
+            >
+              Next
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )

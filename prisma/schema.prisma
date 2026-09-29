@@ -1,13 +1,12 @@
-// Prisma Schema configured for Neon Serverless PostgreSQL & Vercel deployment
+// Prisma Schema configured for PostgreSQL & Vercel deployment
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ─── Auth Models (NextAuth / Auth.js) ────────────────────────────────────────
@@ -67,6 +66,8 @@ model User {
   studentProfile StudentProfile?
   assessments    Assessment[]
   savedCareers   SavedCareer[]
+  savedColleges  SavedCollege[]
+  goals          StudentGoal[]
   comparisons    CareerComparison[]
 
   @@index([email])
@@ -92,11 +93,20 @@ model StudentProfile {
   city                   String?
   percentageObtained     Float?
   isPercentageExpected   Boolean  @default(false)
+  mathMarks              Float?
+  scienceMarks           Float?
+  englishMarks           Float?
+  socialMarks            Float?
   strongSubjects         String[] @default([])
   enjoyedSubjects        String[] @default([])
   dislikedSubjects       String[] @default([])
+  hobbies                String[] @default([])
+  learningStyle          String?  @default("PRACTICAL_HANDS_ON")
+  workEnvironment        String?  @default("TECH_OFFICE")
   preferredStudyLocation String?  @default("HOME_STATE")
   budgetPreference       String?  @default("BUDGET_FRIENDLY")
+  govtPrivatePref        String?  @default("ANY")
+  targetCity             String?
   wantsHigherEducation   Boolean? @default(true)
   careerInterests        String[] @default([])
   createdAt              DateTime @default(now())
@@ -124,8 +134,8 @@ model Assessment {
 model AssessmentQuestion {
   id           String   @id @default(cuid())
   questionText String
-  questionType String   @default("LIKERT")
-  category     String   @default("INTEREST")
+  questionType String   @default("LIKERT") // LIKERT, MCQ, SCENARIO, SUBJECT_PREFERENCE
+  category     String   @default("INTEREST") // INTEREST, APTITUDE, PERSONALITY, ACADEMIC, CAREER_PREF
   options      Json?    @default("[]")
   scoring      Json     @default("{}")
   orderIndex   Int      @default(0)
@@ -155,8 +165,10 @@ model AssessmentResult {
   topPathways        Json     @default("[]")
   recommendedCareers Json     @default("[]")
   summary            String   @db.Text
+  strengths          Json     @default("[]")
   skillsToDevelop    Json     @default("[]")
   nextActions        Json     @default("[]")
+  roadmap            Json     @default("{}")
   createdAt          DateTime @default(now())
 
   assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
@@ -186,8 +198,15 @@ model Career {
   fullDescription    String   @db.Text
   relevantStreams    String[] @default([])
   requiredEducation  String[] @default([])
+  degreesOrDiplomas  String[] @default([])
+  entranceExams      String[] @default([])
+  recommendedSubjects String[] @default([])
   durationToQualify  String?
   workEnvironment    String?
+  salaryRangeMin     Float?   // in LPA (Lakhs Per Annum)
+  salaryRangeMax     Float?
+  salaryRangeLabel   String?  // e.g. "₹4.5 - 18 LPA"
+  growthOutlook      String?  @default("HIGH") // HIGH, VERY_HIGH, MODERATE, STABLE
   whoMightEnjoy      String?  @db.Text
   alternativeRoutes  String[] @default([])
   skills             String[] @default([])
@@ -224,34 +243,42 @@ model Pathway {
   isActive               Boolean  @default(true)
 }
 
-// ─── Colleges (Demo Data) ────────────────────────────────────────────────────
+// ─── Colleges ────────────────────────────────────────────────────────────────
 
 model College {
-  id          String   @id @default(cuid())
-  name        String
-  city        String
-  state       String
-  type        String   @default("GOVERNMENT")
-  affiliation String?
-  ranking     Int?
-  website     String?
-  isDemoData  Boolean  @default(true)
+  id                 String   @id @default(cuid())
+  name               String
+  city               String
+  state              String
+  type               String   @default("GOVERNMENT") // IIT, NIT, AIIMS, GOVERNMENT, PRIVATE, STATE_GOVT
+  affiliation        String?
+  ranking            Int?
+  feesRange          String?  @default("₹10,000 - ₹50,000 / year")
+  admissionProcess   String?  @db.Text
+  entranceExams      String[] @default([])
+  facilities         String[] @default([])
+  website            String?
+  studentSuitability String?  @db.Text
+  estYear            Int?
+  isDemoData         Boolean  @default(false)
 
-  courses Course[]
+  courses      Course[]
+  savedByUsers SavedCollege[]
 }
 
 model Course {
   id          String  @id @default(cuid())
   collegeId   String
   name        String
-  degreeType  String  @default("UNDERGRADUATE")
+  degreeType  String  @default("UNDERGRADUATE") // DIPLOMA, UNDERGRADUATE, INTEGRATED
   duration    String
   eligibility String?
+  feePerYear  String?
 
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 }
 
-// ─── Saved Careers ───────────────────────────────────────────────────────────
+// ─── Saved Items & Goals ─────────────────────────────────────────────────────
 
 model SavedCareer {
   id        String   @id @default(cuid())
@@ -263,6 +290,35 @@ model SavedCareer {
   career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
 
   @@unique([userId, careerId])
+}
+
+model SavedCollege {
+  id        String   @id @default(cuid())
+  userId    String
+  collegeId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+}
+
+model StudentGoal {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  timeframe   String    @default("30_DAYS") // 30_DAYS, 3_MONTHS, 6_MONTHS, 1_YEAR
+  category    String    @default("ACADEMIC") // ACADEMIC, EXPLORATION, APPLICATION, SKILL
+  completed   Boolean   @default(false)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model CareerComparison {

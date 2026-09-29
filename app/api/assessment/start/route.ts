@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/auth.config'
+import { getAuthenticatedUser } from '@/lib/auth/clerk-sync'
 import prisma from '@/lib/db/prisma'
 
 export async function POST() {
   try {
-    const session = await auth()
+    const user = await getAuthenticatedUser()
     
     // Fetch all active questions ordered by display order
     const questions = await prisma.assessmentQuestion.findMany({
@@ -12,11 +12,11 @@ export async function POST() {
       orderBy: { orderIndex: 'asc' },
     })
 
-    if (session?.user?.id) {
+    if (user?.id) {
       // Check for existing in-progress assessment
       let assessment = await prisma.assessment.findFirst({
         where: {
-          userId: session.user.id,
+          userId: user.id,
           status: 'IN_PROGRESS',
         },
       })
@@ -24,7 +24,7 @@ export async function POST() {
       if (!assessment) {
         assessment = await prisma.assessment.create({
           data: {
-            userId: session.user.id,
+            userId: user.id,
             status: 'IN_PROGRESS',
           },
         })

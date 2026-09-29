@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/auth.config'
+import { getAuthenticatedUser } from '@/lib/auth/clerk-sync'
 import prisma from '@/lib/db/prisma'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
+    const user = await getAuthenticatedUser()
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const saved = await prisma.savedCareer.findMany({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       include: { career: { include: { category: true } } },
       orderBy: { createdAt: 'desc' },
     })
@@ -24,8 +26,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
+    const user = await getAuthenticatedUser()
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
     const existing = await prisma.savedCareer.findUnique({
       where: {
         userId_careerId: {
-          userId: session.user.id,
+          userId: user.id,
           careerId,
         },
       },
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
     } else {
       const newSaved = await prisma.savedCareer.create({
         data: {
-          userId: session.user.id,
+          userId: user.id,
           careerId,
         },
       })

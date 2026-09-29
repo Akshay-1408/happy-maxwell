@@ -27,44 +27,53 @@ export function QuestionCard({
   totalQuestions,
 }: QuestionCardProps) {
   const isLikert = question.questionType === 'LIKERT'
-  
-  const options = question.options
-    ? typeof question.options === 'string'
-      ? JSON.parse(question.options)
-      : question.options
-    : [
-        { value: '1', label: '1 - Strongly Disagree / Not Interested' },
-        { value: '2', label: '2 - Slightly Disagree' },
-        { value: '3', label: '3 - Neutral / Undecided' },
-        { value: '4', label: '4 - Agree / Interested' },
-        { value: '5', label: '5 - Strongly Agree / Highly Interested' },
-      ]
+
+  let rawOptions: any[] = []
+  if (question.options) {
+    rawOptions = typeof question.options === 'string' ? JSON.parse(question.options) : question.options
+  }
+
+  const parsedOptions = rawOptions.map((opt: any) => {
+    if (typeof opt === 'string') {
+      const match = opt.match(/^([A-F0-9])[\.\:\-]\s*(.*)$/i)
+      if (match) {
+        return { value: match[1].toUpperCase(), label: opt }
+      }
+      return { value: opt, label: opt }
+    }
+    return { value: opt.value || opt, label: opt.label || opt }
+  })
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-sm">
-      <CardHeader className="space-y-2">
+    <Card className="w-full max-w-2xl mx-auto shadow-md border-slate-200">
+      <CardHeader className="space-y-3 pb-4">
         <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="text-xs">
-            {question.category.replace('_', ' ')}
-          </Badge>
-          <span className="text-xs font-medium text-slate-500">
-            Question {currentIndex + 1} of {totalQuestions}
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs font-semibold uppercase tracking-wider bg-blue-50 text-blue-700">
+              {question.category.replace('_', ' ')}
+            </Badge>
+            <Badge variant="outline" className="text-[11px] text-slate-500">
+              {question.questionType.replace('_', ' ')}
+            </Badge>
+          </div>
+          <span className="text-xs font-semibold text-slate-500">
+            {currentIndex + 1} / {totalQuestions}
           </span>
         </div>
-        <CardTitle className="text-lg sm:text-xl font-semibold leading-snug text-slate-900">
+        <CardTitle className="text-lg sm:text-xl font-bold leading-snug text-slate-900">
           {question.questionText}
         </CardTitle>
       </CardHeader>
 
       <CardContent className="pt-2">
         {isLikert ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-5 gap-2 text-center text-xs text-slate-500 font-medium mb-1">
-              <span>Not at all</span>
-              <span>Slightly</span>
-              <span>Neutral</span>
-              <span>Interested</span>
-              <span>Strongly</span>
+          <div className="space-y-4">
+            <div className="grid grid-cols-5 gap-1 sm:gap-2 text-center text-[11px] sm:text-xs text-slate-500 font-medium">
+              <span className="text-red-600 font-semibold">1 · Low</span>
+              <span>2 · Slight</span>
+              <span>3 · Neutral</span>
+              <span>4 · High</span>
+              <span className="text-emerald-600 font-semibold">5 · Passion</span>
             </div>
             <div className="grid grid-cols-5 gap-2">
               {[1, 2, 3, 4, 5].map((val) => {
@@ -75,10 +84,10 @@ export function QuestionCard({
                     key={val}
                     type="button"
                     onClick={() => onAnswer(question.id, strVal)}
-                    className={`h-12 rounded-lg border-2 font-bold text-base transition-all ${
+                    className={`h-14 rounded-xl border-2 font-extrabold text-lg sm:text-xl transition-all duration-150 ${
                       isSelected
-                        ? 'border-blue-600 bg-blue-50 text-blue-600 shadow-sm'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-blue-600 bg-blue-600 text-white shadow-md scale-102'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50/50'
                     }`}
                   >
                     {val}
@@ -88,32 +97,33 @@ export function QuestionCard({
             </div>
           </div>
         ) : (
-          <RadioGroup
-            value={currentAnswer}
-            onValueChange={(val) => onAnswer(question.id, val)}
-            className="space-y-3"
-          >
-            {options.map((opt: any, idx: number) => {
-              const val = typeof opt === 'object' ? opt.value : opt
-              const label = typeof opt === 'object' ? opt.label : opt
+          <div className="space-y-2.5">
+            {parsedOptions.map((opt, idx) => {
+              const isSelected = currentAnswer === opt.value
               return (
                 <div
                   key={idx}
-                  className={`flex items-center space-x-3 rounded-lg border p-4 transition-all cursor-pointer ${
-                    currentAnswer === val
-                      ? 'border-blue-600 bg-blue-50/50 text-blue-900'
-                      : 'border-slate-200 hover:border-slate-300'
+                  onClick={() => onAnswer(question.id, opt.value)}
+                  className={`flex items-start space-x-3 rounded-xl border p-4 transition-all duration-150 cursor-pointer ${
+                    isSelected
+                      ? 'border-blue-600 bg-blue-50/60 shadow-xs ring-1 ring-blue-600 text-blue-950 font-medium'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 text-slate-800'
                   }`}
-                  onClick={() => onAnswer(question.id, val)}
                 >
-                  <RadioGroupItem value={val} id={`q-${question.id}-opt-${idx}`} />
-                  <Label htmlFor={`q-${question.id}-opt-${idx}`} className="flex-1 cursor-pointer font-normal text-sm sm:text-base">
-                    {label}
+                  <div
+                    className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                      isSelected ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white'
+                    }`}
+                  >
+                    {isSelected && <span className="h-2 w-2 rounded-full bg-white" />}
+                  </div>
+                  <Label className="flex-1 cursor-pointer font-normal text-xs sm:text-sm leading-relaxed">
+                    {opt.label}
                   </Label>
                 </div>
               )
             })}
-          </RadioGroup>
+          </div>
         )}
       </CardContent>
     </Card>

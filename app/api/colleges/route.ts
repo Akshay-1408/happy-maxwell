@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/db/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
@@ -22,19 +24,19 @@ export async function GET(req: Request) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
         { city: { contains: search, mode: 'insensitive' } },
+        { state: { contains: search, mode: 'insensitive' } },
       ]
     }
 
     const colleges = await prisma.college.findMany({
       where,
       include: { courses: true },
-      take: 20,
+      orderBy: { ranking: 'asc' },
     })
 
     return NextResponse.json({
       data: colleges,
-      isDemoData: true,
-      notice: 'The college data provided is demonstration data for career exploration.',
+      count: colleges.length,
     })
   } catch (error) {
     console.error('Fetch colleges error:', error)

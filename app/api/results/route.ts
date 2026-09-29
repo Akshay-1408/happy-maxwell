@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth/auth.config'
+import { getAuthenticatedUser } from '@/lib/auth/clerk-sync'
 import prisma from '@/lib/db/prisma'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
+    const user = await getAuthenticatedUser()
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const latestResult = await prisma.assessmentResult.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
     })
 
@@ -30,8 +32,10 @@ export async function GET() {
       categoryScores: parseJson(latestResult.categoryScores),
       topPathways: parseJson(latestResult.topPathways),
       recommendedCareers: parseJson(latestResult.recommendedCareers),
+      strengths: parseJson(latestResult.strengths),
       skillsToDevelop: parseJson(latestResult.skillsToDevelop),
       nextActions: parseJson(latestResult.nextActions),
+      roadmap: parseJson(latestResult.roadmap),
     })
   } catch (error) {
     console.error('Fetch result error:', error)
