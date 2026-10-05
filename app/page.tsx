@@ -4,26 +4,23 @@ import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import gsap from 'gsap'
 import { GsapReveal } from '@/components/animations/gsap-reveal'
-import { Spotlight } from '@/components/animations/spotlight'
 import {
   GraduationCap,
   ArrowRight,
   CheckCircle2,
   Compass,
-  ShieldCheck,
   HeartHandshake,
   MessageSquare,
-  Sparkles,
   Building2,
   Scale,
   Award,
-  Zap,
   Target,
-  Brain,
-  TrendingUp,
   ChevronDown,
+  Brain,
+  Sparkles,
   BookOpen,
-  Check,
+  TrendingUp,
+  Zap,
 } from 'lucide-react'
 
 // ─── Data ───────────────────────────────────────────────────────────────────
@@ -32,124 +29,126 @@ const streams = [
   {
     name: 'Science (PCM)',
     icon: '⚛️',
-    gradient: 'from-blue-500/20 to-indigo-500/20',
-    accentColor: 'text-blue-400',
-    borderColor: 'hover:border-blue-500/40',
-    desc: 'Physics, Chemistry, Mathematics. Ideal for software engineering, AI/ML, robotics, architecture, and aviation.',
-    careers: ['Software Developer', 'AI/ML Engineer', 'Mechanical Engineer', 'Commercial Pilot'],
+    color: 'blue',
+    desc: 'Physics, Chemistry, Mathematics. Ideal for engineering, software, AI/ML, and aviation.',
+    careers: ['Software Developer', 'AI Engineer', 'Mechanical Engineer', 'Pilot'],
     link: '/pathways/science-pcm',
   },
   {
     name: 'Science (PCB)',
     icon: '🧬',
-    gradient: 'from-emerald-500/20 to-teal-500/20',
-    accentColor: 'text-emerald-400',
-    borderColor: 'hover:border-emerald-500/40',
-    desc: 'Physics, Chemistry, Biology. Ideal for clinical medicine, dental, pharmacy, physiotherapy, and biotechnology.',
-    careers: ['Clinical Doctor (MBBS)', 'Pharmacist', 'Physiotherapist', 'Biotechnologist'],
+    color: 'emerald',
+    desc: 'Physics, Chemistry, Biology. Ideal for medicine, dentistry, pharmacy, and biotech.',
+    careers: ['MBBS Doctor', 'Pharmacist', 'Physiotherapist', 'Biotechnologist'],
     link: '/pathways/science-pcb',
   },
   {
     name: 'Science (PCMB)',
     icon: '🔬',
-    gradient: 'from-violet-500/20 to-purple-500/20',
-    accentColor: 'text-violet-400',
-    borderColor: 'hover:border-violet-500/40',
-    desc: 'Combined Mathematics & Biology. Keeps both Engineering (JEE) and Medical (NEET) options open.',
-    careers: ['Biomedical Engineer', 'Bioinformatics Specialist', 'Clinical Doctor', 'Forensic Scientist'],
+    color: 'violet',
+    desc: 'Combined Maths & Biology. Keeps both JEE and NEET options open simultaneously.',
+    careers: ['Biomedical Engineer', 'Clinical Doctor', 'Bioinformatics Specialist'],
     link: '/pathways/science-pcmb',
   },
   {
     name: 'Commerce with Math',
     icon: '📈',
-    gradient: 'from-amber-500/20 to-orange-500/20',
-    accentColor: 'text-amber-400',
-    borderColor: 'hover:border-amber-500/40',
-    desc: 'Accountancy, Economics, Business Studies & Math. Ideal for Chartered Accountancy, Investment Banking, and IIM IPM.',
-    careers: ['Chartered Accountant (CA)', 'Investment Banker', 'Product Manager', 'Data Analyst'],
+    color: 'amber',
+    desc: 'Accountancy, Economics, Business & Math. Great for CA, investment banking, and IIM IPM.',
+    careers: ['Chartered Accountant', 'Investment Banker', 'Data Analyst'],
     link: '/pathways/commerce-with-math',
   },
   {
     name: 'Arts & Humanities',
     icon: '🎭',
-    gradient: 'from-rose-500/20 to-pink-500/20',
-    accentColor: 'text-rose-400',
-    borderColor: 'hover:border-rose-500/40',
-    desc: 'History, Political Science, Psychology, Sociology. Ideal for corporate law (CLAT), Civil Services (UPSC), and UI/UX design.',
-    careers: ['Corporate Lawyer', 'Civil Services Officer (IAS)', 'UI/UX Designer', 'Clinical Psychologist'],
+    color: 'rose',
+    desc: 'History, Political Science, Psychology. Paths include law (CLAT), UPSC, and design.',
+    careers: ['Corporate Lawyer', 'IAS Officer', 'UX Designer', 'Psychologist'],
     link: '/pathways/arts-humanities',
   },
   {
     name: 'Polytechnic Diploma',
     icon: '⚙️',
-    gradient: 'from-cyan-500/20 to-sky-500/20',
-    accentColor: 'text-cyan-400',
-    borderColor: 'hover:border-cyan-500/40',
-    desc: '3-Year Practical technical diploma after 10th. Direct entry into industry or lateral admission to 2nd year B.Tech.',
-    careers: ['Junior Engineer', 'CAD Specialist', 'Automation Supervisor'],
+    color: 'cyan',
+    desc: '3-year practical diploma. Enter industry faster or join B.Tech via lateral entry.',
+    careers: ['Junior Engineer', 'CAD Specialist', 'Automation Technician'],
     link: '/pathways/diploma-engineering',
   },
 ]
+
+const colorMap: Record<string, { bg: string; text: string; border: string; tag: string }> = {
+  blue:    { bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200',   tag: 'bg-blue-50 text-blue-600 border-blue-200' },
+  emerald: { bg: 'bg-emerald-50',text: 'text-emerald-700',border: 'border-emerald-200',tag: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
+  violet:  { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', tag: 'bg-violet-50 text-violet-600 border-violet-200' },
+  amber:   { bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-amber-200',  tag: 'bg-amber-50 text-amber-600 border-amber-200' },
+  rose:    { bg: 'bg-rose-50',   text: 'text-rose-700',   border: 'border-rose-200',   tag: 'bg-rose-50 text-rose-600 border-rose-200' },
+  cyan:    { bg: 'bg-cyan-50',   text: 'text-cyan-700',   border: 'border-cyan-200',   tag: 'bg-cyan-50 text-cyan-600 border-cyan-200' },
+}
 
 const features = [
   {
     icon: Scale,
     title: 'Side-by-Side Comparison',
-    desc: 'Compare up to 3 careers or 3 colleges side-by-side evaluating tuition costs, duration, skills, and eligibility.',
+    desc: 'Compare up to 3 careers or colleges at once — fees, entrance exams, salaries, and eligibility.',
     link: '/compare',
-    linkText: 'Open Comparison Matrix',
-    gradient: 'from-indigo-500 to-violet-500',
-    glow: 'shadow-indigo-500/20',
+    linkText: 'Open Comparison Tool',
+    iconBg: 'bg-blue-600',
   },
   {
     icon: Building2,
     title: 'College & Course Discovery',
-    desc: 'Explore 20+ premier Indian colleges (IITs, NITs, AIIMS, SRCC, Polytechnics) with verified fees and entrance exams.',
+    desc: 'Explore 20+ top Indian colleges — IITs, NITs, AIIMS, SRCC — with verified fees and entrance info.',
     link: '/colleges',
-    linkText: 'Browse College Explorer',
-    gradient: 'from-violet-500 to-purple-500',
-    glow: 'shadow-violet-500/20',
+    linkText: 'Browse Colleges',
+    iconBg: 'bg-blue-600',
   },
   {
     icon: HeartHandshake,
     title: 'Parent Discussion Guide',
-    desc: 'Questions parents should ask, avoiding entrance exam burnout, and financial planning for higher education.',
+    desc: 'Key questions to ask together, how to plan fees, and how to avoid entrance exam burnout.',
     link: '/parents',
-    linkText: 'Read Parent Guide',
-    gradient: 'from-cyan-500 to-blue-500',
-    glow: 'shadow-cyan-500/20',
+    linkText: 'Read the Guide',
+    iconBg: 'bg-blue-600',
   },
 ]
 
 const faqs = [
   {
-    q: 'Is this a guaranteed prediction of my exact career?',
-    a: 'No. SmartCareer provides objective decision-support guidance based on your academic performance, subject interests, and aptitude. It empowers you to understand stream tradeoffs and discuss options with parents and school counselors.',
+    q: 'Is this a guaranteed prediction of my career?',
+    a: 'No. SmartCareer gives you objective, data-backed guidance — not guarantees. It helps you understand your options, not make decisions for you.',
   },
   {
-    q: 'How are stream recommendations calculated?',
-    a: 'Recommendations use a transparent multi-factor scoring engine that weighs Interest (30%), Aptitude (20%), 10th Standard Academic Marks (20%), Work/Learning Preferences (15%), Personality Fit (10%), and Constraints (5%).',
+    q: 'How are recommendations calculated?',
+    a: 'A transparent scoring engine weighs 6 factors: Interest (30%), Aptitude (20%), Academic Marks (20%), Work Style (15%), Personality Fit (10%), and Constraints (5%).',
   },
   {
-    q: 'Can I compare colleges and careers side-by-side?',
-    a: 'Yes! You can compare up to 3 careers or up to 3 colleges side-by-side, evaluating tuition fees, entrance exams, salaries, skills, and eligibility.',
+    q: 'Can I compare careers and colleges?',
+    a: 'Yes. Compare up to 3 careers or 3 colleges side-by-side across fees, entrance exams, expected salaries, and required skills.',
   },
   {
-    q: 'Is SmartCareer completely free to use?',
-    a: 'Yes! The 30-question assessment, career directory, college explorer, comparison tool, AI counselor, and parent guide are 100% free for students.',
+    q: 'Is SmartCareer free to use?',
+    a: 'Yes — 100% free. The assessment, career directory, college explorer, comparison tool, AI counselor, and parent guide are all free.',
   },
   {
-    q: 'How does the AI Career Counselor work?',
-    a: 'Our server-side AI counselor uses your stored 10th profile and assessment scores to answer questions, explain stream tradeoffs, and recommend next steps without making unrealistic guarantees.',
+    q: 'How does the AI Counselor work?',
+    a: 'It uses your saved 10th profile and assessment results to answer questions about streams and career tradeoffs in plain, honest language.',
   },
 ]
 
 const stats = [
-  { value: '30+', label: 'Career Paths', icon: Target },
-  { value: '20+', label: 'Top Colleges', icon: Building2 },
-  { value: '6', label: 'Stream Guides', icon: Compass },
-  { value: '100%', label: 'Free Forever', icon: Award },
+  { value: '30+', label: 'Career Paths Covered',   icon: Target },
+  { value: '20+', label: 'Top Colleges Listed',    icon: Building2 },
+  { value: '6',   label: 'Stream Guides Available', icon: Compass },
+  { value: '100%', label: 'Free for Students',     icon: Award },
 ]
+
+const howItWorks = [
+  { step: 1, title: 'Create your 10th profile', desc: 'Add your marks, subject interests, and career goals.', icon: BookOpen },
+  { step: 2, title: 'Take the 30-question assessment', desc: 'Answer questions on aptitude, personality, and preferences.', icon: Brain },
+  { step: 3, title: 'Get your stream recommendation', desc: 'See a ranked list of streams with fit scores and explanations.', icon: TrendingUp },
+]
+
+// ─── Page ───────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null)
@@ -157,201 +156,162 @@ export default function LandingPage() {
   useEffect(() => {
     const el = heroRef.current
     if (!el) return
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReducedMotion) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const ctx = gsap.context(() => {
-      gsap.from('.hero-headline', {
-        y: 40,
-        opacity: 0,
-        duration: 0.9,
-        ease: 'power3.out',
-      })
-      gsap.from('.hero-sub', {
-        y: 25,
-        opacity: 0,
-        duration: 0.8,
-        delay: 0.2,
-        ease: 'power3.out',
-      })
-      gsap.from('.hero-cta', {
-        y: 20,
-        opacity: 0,
-        duration: 0.7,
-        delay: 0.35,
-        ease: 'power3.out',
-      })
-      gsap.from('.hero-card', {
-        scale: 0.93,
-        opacity: 0,
-        duration: 1,
-        delay: 0.25,
-        ease: 'power2.out',
-      })
+      gsap.from('.hero-badge', { y: 16, opacity: 0, duration: 0.5, ease: 'power2.out' })
+      gsap.from('.hero-headline', { y: 30, opacity: 0, duration: 0.7, delay: 0.1, ease: 'power3.out' })
+      gsap.from('.hero-sub',      { y: 20, opacity: 0, duration: 0.6, delay: 0.25, ease: 'power2.out' })
+      gsap.from('.hero-cta',      { y: 16, opacity: 0, duration: 0.5, delay: 0.38, ease: 'power2.out' })
+      gsap.from('.hero-trust',    { y: 12, opacity: 0, duration: 0.5, delay: 0.5,  ease: 'power2.out' })
+      gsap.from('.hero-card',     { y: 24, opacity: 0, duration: 0.8, delay: 0.2,  ease: 'power3.out' })
     }, el)
 
     return () => ctx.revert()
   }, [])
 
   return (
-    <div className="relative overflow-x-hidden bg-[#090a0f]">
-      {/* Ambient background glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-gradient-to-b from-indigo-600/15 via-violet-600/8 to-transparent blur-[140px] pointer-events-none rounded-full" />
-      <div className="absolute top-[30%] right-[-10%] w-[500px] h-[500px] bg-cyan-600/10 blur-[130px] pointer-events-none rounded-full" />
+    <div className="bg-[#f8fafc]">
 
-      {/* ── Hero Section ─────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative min-h-[90vh] flex items-center overflow-hidden py-16 lg:py-24">
-        {/* Subtle grid pattern */}
+      {/* ── Hero ──────────────────────────────────────────────────────── */}
+      <section ref={heroRef} className="relative overflow-hidden">
+        {/* Subtle dot pattern */}
         <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)`,
-            backgroundSize: '48px 48px',
-          }}
+          className="absolute inset-0 hero-pattern opacity-60 pointer-events-none"
+          aria-hidden="true"
+        />
+        {/* Subtle top-edge blue glow */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-blue-100 blur-[100px] opacity-50 pointer-events-none rounded-full"
+          aria-hidden="true"
         />
 
-        <div className="relative container mx-auto px-4 sm:px-6 z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="relative container mx-auto px-4 sm:px-6 pt-16 pb-20 lg:pt-24 lg:pb-28">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-            {/* Left Content */}
-            <div className="space-y-8">
-              {/* Badge pill */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold shadow-inner">
-                <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-                <span>AI-Assisted Career Intelligence for 10th Standard</span>
+            {/* Left */}
+            <div className="space-y-7 max-w-xl">
+              <div className="hero-badge">
+                <span className="badge-blue">
+                  <Sparkles className="h-3 w-3" />
+                  AI-Assisted Career Guidance · After 10th Standard
+                </span>
               </div>
 
-              {/* Headline */}
-              <div className="hero-headline space-y-3">
-                <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-[1.08] text-white">
+              <div className="hero-headline">
+                <h1 className="text-display text-4xl sm:text-5xl text-slate-900 leading-[1.1]">
                   What Should You Do{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400">
-                    After 10th Standard?
-                  </span>
+                  <span className="text-gradient-blue">After 10th Standard?</span>
                 </h1>
               </div>
 
-              {/* Sub-headline */}
-              <p className="hero-sub text-[16px] sm:text-[18px] text-slate-400 max-w-xl leading-relaxed">
-                Stop guessing your stream. Analyze your academic marks, subject interests, aptitude, and career goals with{' '}
-                <span className="text-slate-200 font-semibold">transparent, data-backed guidance.</span>
+              <p className="hero-sub text-lg text-slate-600 leading-relaxed">
+                Stop guessing your stream. Get a clear, honest recommendation based on your academic marks, subject interests, aptitude, and career goals.
               </p>
 
-              {/* CTAs */}
-              <div className="hero-cta flex flex-col sm:flex-row gap-3 pt-2">
+              <div className="hero-cta flex flex-wrap gap-3">
                 <Link href="/assessment">
-                  <button className="btn-gradient flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl text-[14px] font-bold text-white shadow-xl shadow-indigo-500/20 group">
-                    <Sparkles className="h-4 w-4 text-indigo-200" />
-                    <span>Start Free Assessment</span>
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+                  <button className="btn-primary px-6 py-2.5 text-sm">
+                    Start Free Assessment
+                    <ArrowRight className="h-4 w-4" />
                   </button>
                 </Link>
                 <Link href="/careers">
-                  <button className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-semibold text-slate-300 bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white transition-all duration-200">
-                    Explore 30+ Careers
+                  <button className="btn-secondary px-5 py-2.5 text-sm">
+                    Explore Careers
                   </button>
                 </Link>
                 <Link href="/counselor">
-                  <button className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-[14px] font-semibold text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all duration-200">
+                  <button className="btn-ghost text-sm flex items-center gap-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50">
                     <MessageSquare className="h-4 w-4" />
                     AI Counselor
                   </button>
                 </Link>
               </div>
 
-              {/* Trust indicators */}
-              <div className="flex flex-wrap items-center gap-6 text-[13px] text-slate-400 pt-2">
-                {['30-Question Aptitude Engine', 'Multi-Factor Scoring', '100% Free Forever'].map((item) => (
-                  <span key={item} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                    {item}
+              <div className="hero-trust flex flex-wrap gap-5 text-sm text-slate-500">
+                {['30-question aptitude test', 'Transparent scoring', '100% free forever'].map((t) => (
+                  <span key={t} className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    {t}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Right — Decision Engine Simulation Card */}
-            <div className="hero-card relative">
-              <div className="glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/[0.08] relative overflow-hidden shadow-2xl shadow-black/80">
-                <Spotlight fill="rgba(99, 102, 241, 0.22)" />
-
+            {/* Right — Preview Card */}
+            <div className="hero-card">
+              <div className="card-raised rounded-xl p-6 sm:p-7 space-y-5 bg-white">
                 {/* Card header */}
-                <div className="relative z-10 flex items-center justify-between pb-4 border-b border-white/[0.06]">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                   <div>
-                    <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">Multi-Factor Engine</span>
-                    <h3 className="text-lg font-extrabold text-white">SmartCareer Assessment Fit</h3>
+                    <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-0.5">
+                      Assessment Preview
+                    </p>
+                    <h3 className="text-base font-bold text-slate-900">Your Stream Fit Score</h3>
                   </div>
-                  <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-inner">
-                    <Brain className="h-5 w-5 text-indigo-400" />
+                  <div className="h-10 w-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                    <Brain className="h-5 w-5 text-blue-600" />
                   </div>
                 </div>
 
-                {/* Inputs flow */}
-                <div className="relative z-10 space-y-3">
+                {/* Scoring bars */}
+                <div className="space-y-3.5">
                   {[
-                    { label: '10th Academics', value: 'Math (88%), Science (92%)', pct: 20, color: 'from-indigo-500 to-indigo-600' },
-                    { label: 'Subject Interest', value: 'Coding, Physics & Robotics', pct: 30, color: 'from-violet-500 to-purple-600' },
-                    { label: 'Career Goals', value: 'Tech / Software Engineering', pct: 15, color: 'from-cyan-500 to-blue-600' },
-                    { label: 'Personality Fit', value: 'Analytical & Structured', pct: 10, color: 'from-emerald-500 to-teal-600' },
+                    { label: '10th Marks',        value: 'Math 88%, Science 92%',   pct: 88, color: 'bg-blue-500' },
+                    { label: 'Subject Interest',   value: 'Coding & Physics',        pct: 92, color: 'bg-blue-600' },
+                    { label: 'Career Goals',       value: 'Tech / Software',         pct: 85, color: 'bg-blue-400' },
+                    { label: 'Personality Fit',    value: 'Analytical & Structured', pct: 78, color: 'bg-slate-400' },
                   ].map((item) => (
-                    <div key={item.label} className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-semibold text-slate-300">{item.label}</span>
-                        <span className="text-[11px] text-slate-500">{item.value}</span>
+                    <div key={item.label} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="font-medium text-slate-700">{item.label}</span>
+                        <span className="text-slate-400">{item.value}</span>
                       </div>
-                      <div className="h-1.5 w-full bg-[#090b12] rounded-full overflow-hidden border border-white/[0.04]">
-                        <div
-                          className={`h-full rounded-full bg-gradient-to-r ${item.color}`}
-                          style={{ width: `${item.pct * 3.3}%` }}
-                        />
+                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.pct}%` }} />
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Result Preview Box */}
-                <div className="relative z-10 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-[#0e1220] to-[#121729] border border-indigo-500/25 p-4 space-y-3 shadow-lg">
+                {/* Result */}
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Top Stream Match</span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      89% Fit Score
-                    </span>
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Top Match</span>
+                    <span className="badge-green text-xs">89% fit</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20">⚛️</span>
+                    <span className="text-2xl">⚛️</span>
                     <div>
-                      <p className="text-[15px] font-bold text-white">Science (PCM)</p>
-                      <p className="text-[12px] text-slate-400">JEE Main/Adv → B.Tech → AI / Software</p>
+                      <p className="font-bold text-slate-900">Science (PCM)</p>
+                      <p className="text-xs text-slate-500">JEE → B.Tech → AI / Software Engineering</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] pt-1 border-t border-white/[0.04] text-slate-400">
-                    <span>Est. Starting CTC: <span className="text-emerald-400 font-bold">₹8 - 24 LPA</span></span>
-                    <span className="text-indigo-400 font-semibold">High Growth Outlook</span>
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-blue-200 text-slate-500">
+                    <span>Starting CTC: <span className="font-semibold text-emerald-600">₹8 – 24 LPA</span></span>
+                    <span className="text-blue-600 font-medium">High growth</span>
                   </div>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* ── Stats Bar ────────────────────────────────────────────── */}
+      {/* ── Stats Bar ─────────────────────────────────────────────────── */}
       <GsapReveal animation="fade-in">
-        <div className="border-y border-white/[0.07] bg-[#0c0e17]/80 backdrop-blur-xl">
-          <div className="container mx-auto px-4 sm:px-6 py-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {stats.map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3.5 group">
-                  <div className="h-11 w-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center group-hover:border-indigo-400/40 transition-colors">
-                    <stat.icon className="h-5 w-5 text-indigo-400" />
+        <div className="border-y border-slate-200 bg-white">
+          <div className="container mx-auto px-4 sm:px-6 py-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 divide-x divide-slate-100">
+              {stats.map((stat, i) => (
+                <div key={stat.label} className={`flex items-center gap-3 ${i > 0 ? 'pl-6' : ''}`}>
+                  <div className="h-10 w-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                    <stat.icon className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-black text-white tracking-tight leading-none">{stat.value}</p>
-                    <p className="text-xs text-slate-400 mt-1">{stat.label}</p>
+                    <p className="text-xl font-bold text-slate-900">{stat.value}</p>
+                    <p className="text-xs text-slate-500">{stat.label}</p>
                   </div>
                 </div>
               ))}
@@ -360,61 +320,34 @@ export default function LandingPage() {
         </div>
       </GsapReveal>
 
-      {/* ── Pathways Grid ─────────────────────────────────────────── */}
-      <section className="relative py-24 overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 space-y-14">
-          <GsapReveal animation="fade-up" className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-bold uppercase tracking-wider">
-              <Compass className="h-3.5 w-3.5" />
-              Stream Directory
+      {/* ── How It Works ──────────────────────────────────────────────── */}
+      <section className="py-20 border-b border-slate-200">
+        <div className="container mx-auto px-4 sm:px-6">
+          <GsapReveal animation="fade-up" className="text-center max-w-2xl mx-auto mb-12">
+            <span className="badge-blue mb-4">
+              <Zap className="h-3 w-3" />
+              How It Works
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Explore Pathways <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">After 10th</span>
+            <h2 className="text-display text-3xl sm:text-4xl text-slate-900 mb-3">
+              Three steps to clarity
             </h2>
-            <p className="text-slate-400 text-[15px] leading-relaxed">
-              Understand subject combinations, difficulty levels, and career outcomes for all primary Indian educational streams.
+            <p className="text-slate-600 text-base">
+              No complex forms. No jargon. Just a clear path to understanding your best options after 10th.
             </p>
           </GsapReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {streams.map((s, idx) => (
-              <GsapReveal key={idx} animation="fade-up" delay={idx * 0.08}>
-                <div
-                  className={`glass-card rounded-2xl p-6 flex flex-col gap-4 border border-white/[0.07] h-full ${s.borderColor}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className={`text-3xl p-3 rounded-2xl bg-gradient-to-br ${s.gradient} border border-white/5`}>
-                      {s.icon}
-                    </div>
-                    <span className={`text-[11px] font-bold uppercase tracking-wider ${s.accentColor} bg-white/[0.03] px-2.5 py-1 rounded-md border border-white/[0.06]`}>
-                      Stream
-                    </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {howItWorks.map((step, idx) => (
+              <GsapReveal key={idx} animation="fade-up" delay={idx * 0.12}>
+                <div className="flex flex-col items-start gap-4">
+                  <div className="step-number">{step.step}</div>
+                  <div className="h-11 w-11 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
+                    <step.icon className="h-5 w-5 text-white" />
                   </div>
-
-                  <div className="space-y-1.5">
-                    <h3 className="text-[17px] font-bold text-white">{s.name}</h3>
-                    <p className="text-[13px] text-slate-400 leading-relaxed">{s.desc}</p>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1">{step.title}</h3>
+                    <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
                   </div>
-
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {s.careers.map((c, i) => (
-                      <span
-                        key={i}
-                        className="px-2.5 py-0.5 rounded-md text-[11px] font-medium text-slate-300 bg-[#0b0e18] border border-white/[0.06]"
-                      >
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-
-                  <Link href={s.link} className="mt-auto pt-2">
-                    <button
-                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-[13px] font-semibold border border-white/[0.08] hover:border-indigo-500/40 hover:bg-indigo-500/10 text-slate-200 hover:text-white transition-all group`}
-                    >
-                      <span>Explore Stream Guide</span>
-                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
-                    </button>
-                  </Link>
                 </div>
               </GsapReveal>
             ))}
@@ -422,37 +355,91 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Features Bento Grid ───────────────────────────────────── */}
-      <section className="py-24 border-t border-white/[0.07] relative">
-        <div className="container mx-auto px-4 sm:px-6 space-y-14">
-          <GsapReveal animation="fade-up" className="text-center max-w-xl mx-auto space-y-3">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-bold uppercase tracking-wider">
-              <Zap className="h-3.5 w-3.5" />
-              Platform Capabilities
+      {/* ── Stream Pathways Grid ──────────────────────────────────────── */}
+      <section className="py-20 border-b border-slate-200">
+        <div className="container mx-auto px-4 sm:px-6">
+          <GsapReveal animation="fade-up" className="text-center max-w-2xl mx-auto mb-12">
+            <span className="badge-blue mb-4">
+              <Compass className="h-3 w-3" />
+              Stream Directory
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Everything You Need to{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">Decide Confidently</span>
+            <h2 className="text-display text-3xl sm:text-4xl text-slate-900 mb-3">
+              Explore your options after 10th
             </h2>
+            <p className="text-slate-600 text-base">
+              Understand subject combinations, difficulty, and career outcomes for every major Indian stream.
+            </p>
+          </GsapReveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {streams.map((s, idx) => {
+              const c = colorMap[s.color]
+              return (
+                <GsapReveal key={idx} animation="fade-up" delay={idx * 0.07}>
+                  <div className="card-surface rounded-xl p-5 flex flex-col gap-4 h-full bg-white">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-2xl h-11 w-11 flex items-center justify-center rounded-lg ${c.bg} border ${c.border}`}>
+                        {s.icon}
+                      </span>
+                      <span className={`badge-slate text-[11px]`}>Stream</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 mb-1">{s.name}</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {s.careers.map((career, i) => (
+                        <span key={i} className={`text-[11px] px-2 py-0.5 rounded border font-medium ${c.tag}`}>
+                          {career}
+                        </span>
+                      ))}
+                    </div>
+                    <Link href={s.link} className="mt-auto">
+                      <button className="w-full btn-secondary justify-between text-sm py-2">
+                        <span>View Stream Guide</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </Link>
+                  </div>
+                </GsapReveal>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ──────────────────────────────────────────────────── */}
+      <section className="py-20 border-b border-slate-200 bg-white">
+        <div className="container mx-auto px-4 sm:px-6">
+          <GsapReveal animation="fade-up" className="text-center max-w-xl mx-auto mb-12">
+            <span className="badge-blue mb-4">
+              <Zap className="h-3 w-3" />
+              Platform Features
+            </span>
+            <h2 className="text-display text-3xl sm:text-4xl text-slate-900 mb-3">
+              Everything you need to decide
+            </h2>
+            <p className="text-slate-600 text-base">
+              Free tools that give you real information, not vague advice.
+            </p>
           </GsapReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {features.map((f, idx) => (
               <GsapReveal key={idx} animation="fade-up" delay={idx * 0.1}>
-                <div className="glass-card rounded-2xl p-6 flex flex-col gap-4 h-full border border-white/[0.07] hover:border-indigo-500/30">
-                  <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center shadow-lg ${f.glow}`}>
-                    <f.icon className="h-6 w-6 text-white" />
+                <div className="card-surface rounded-xl p-6 flex flex-col gap-4 h-full bg-white">
+                  <div className={`h-11 w-11 rounded-lg ${f.iconBg} flex items-center justify-center shadow-sm`}>
+                    <f.icon className="h-5 w-5 text-white" />
                   </div>
-                  <div className="space-y-1.5">
-                    <h3 className="text-[17px] font-bold text-white">{f.title}</h3>
-                    <p className="text-[13px] text-slate-400 leading-relaxed">{f.desc}</p>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-1.5">{f.title}</h3>
+                    <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
                   </div>
-                  <Link
-                    href={f.link}
-                    className="mt-auto flex items-center gap-1.5 text-[13px] font-semibold text-indigo-400 hover:text-indigo-300 transition-colors pt-2"
-                  >
-                    {f.linkText}
-                    <ArrowRight className="h-3.5 w-3.5" />
+                  <Link href={f.link} className="mt-auto">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                      {f.linkText}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
                   </Link>
                 </div>
               </GsapReveal>
@@ -461,81 +448,75 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FAQ ───────────────────────────────────────────────────── */}
-      <section className="py-24 border-t border-white/[0.07]">
-        <div className="container mx-auto px-4 sm:px-6 max-w-3xl space-y-10">
-          <GsapReveal animation="fade-up" className="text-center space-y-3">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Questions</span>
+      {/* ── FAQ ───────────────────────────────────────────────────────── */}
+      <section className="py-20 border-b border-slate-200">
+        <div className="container mx-auto px-4 sm:px-6 max-w-3xl">
+          <GsapReveal animation="fade-up" className="text-center mb-10">
+            <h2 className="text-display text-3xl sm:text-4xl text-slate-900 mb-3">
+              Frequently asked questions
             </h2>
-            <p className="text-slate-400 text-[14px]">Common questions about post-10th stream selection and assessment.</p>
+            <p className="text-slate-500 text-base">Common questions about stream selection and the assessment.</p>
           </GsapReveal>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {faqs.map((faq, idx) => (
               <GsapReveal key={idx} animation="fade-up" delay={idx * 0.05}>
-                <FaqAccordionItem faq={faq} />
+                <FaqItem faq={faq} />
               </GsapReveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Bottom CTA ────────────────────────────────────────────── */}
-      <section className="py-24 border-t border-white/[0.07] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-950/20 to-transparent pointer-events-none" />
-        <div className="container mx-auto px-4 sm:px-6 text-center space-y-8 max-w-2xl relative z-10">
-          <GsapReveal animation="fade-up" className="space-y-3">
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-              Ready to Discover Your{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400">Ideal Pathway?</span>
+      {/* ── Bottom CTA ────────────────────────────────────────────────── */}
+      <section className="py-20 bg-blue-600">
+        <div className="container mx-auto px-4 sm:px-6 text-center max-w-2xl">
+          <GsapReveal animation="fade-up" className="space-y-6">
+            <h2 className="text-display text-3xl sm:text-4xl text-white">
+              Ready to find your stream?
             </h2>
-            <p className="text-slate-400 text-[16px] leading-relaxed">
-              Take the free 30-question assessment and get an explainable, personalized stream recommendation in minutes.
+            <p className="text-blue-100 text-lg leading-relaxed">
+              Take the free 30-question assessment and get a clear, personalized recommendation in minutes.
             </p>
-          </GsapReveal>
-          <GsapReveal animation="fade-up" delay={0.15}>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-wrap gap-3 justify-center">
               <Link href="/assessment">
-                <button className="btn-gradient flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-[15px] font-bold text-white shadow-xl shadow-indigo-500/25">
-                  <Sparkles className="h-5 w-5 text-indigo-200" />
-                  <span>Start Free Assessment</span>
-                  <ArrowRight className="h-5 w-5" />
+                <button className="inline-flex items-center gap-2 px-7 py-3 rounded-lg bg-white text-blue-700 font-bold text-sm hover:bg-blue-50 transition-colors shadow-sm">
+                  Start Free Assessment
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
               <Link href="/counselor">
-                <button className="flex items-center justify-center gap-2 px-7 py-4 rounded-xl text-[15px] font-semibold text-slate-300 bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-white transition-all">
-                  <MessageSquare className="h-5 w-5 text-indigo-400" />
-                  <span>Chat with AI Counselor</span>
+                <button className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-400 transition-colors border border-blue-400">
+                  <MessageSquare className="h-4 w-4" />
+                  Ask AI Counselor
                 </button>
               </Link>
             </div>
           </GsapReveal>
         </div>
       </section>
-
     </div>
   )
 }
 
-function FaqAccordionItem({ faq }: { faq: { q: string; a: string } }) {
+// ─── FAQ Accordion ────────────────────────────────────────────────────────────
+
+function FaqItem({ faq }: { faq: { q: string; a: string } }) {
   const [open, setOpen] = useState(false)
 
   return (
     <div
-      className="glass-card rounded-2xl overflow-hidden cursor-pointer border border-white/[0.07] transition-all"
+      className="card-surface rounded-lg overflow-hidden cursor-pointer bg-white"
       onClick={() => setOpen((v) => !v)}
     >
-      <div className="flex items-center justify-between gap-4 p-5">
-        <h3 className="text-[15px] font-semibold text-slate-200 leading-snug">{faq.q}</h3>
+      <div className="flex items-center justify-between gap-4 px-5 py-4">
+        <h3 className="text-sm font-semibold text-slate-800">{faq.q}</h3>
         <ChevronDown
-          className={`h-4 w-4 text-indigo-400 shrink-0 transition-transform duration-300 ${
-            open ? 'rotate-180' : ''
-          }`}
+          className={`h-4 w-4 text-slate-400 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         />
       </div>
       {open && (
-        <div className="px-5 pb-5 text-sm text-slate-400 leading-relaxed border-t border-white/[0.04] pt-4">
+        <div className="px-5 pb-4 text-sm text-slate-500 leading-relaxed border-t border-slate-100 pt-3">
           {faq.a}
         </div>
       )}

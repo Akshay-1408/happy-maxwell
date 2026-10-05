@@ -2,21 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import {
   MessageSquare,
   Send,
   Bot,
   User,
-  Sparkles,
   ArrowLeft,
   ShieldAlert,
-  GraduationCap,
-  Scale,
-  Compass,
 } from 'lucide-react'
 
 interface ChatMessage {
@@ -36,11 +29,9 @@ export default function CounselorPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: `Hello! I am your **SmartCareer AI Counselor**. 
+      content: `Hi! I'm your SmartCareer AI Counselor.
 
-I can help you evaluate **Science (PCM/PCB)**, **Commerce**, **Arts & Humanities**, and **Polytechnic Diplomas** after 10th standard.
-
-How can I assist your stream and education decisions today?`,
+I can help you think through Science (PCM/PCB), Commerce, Arts, and Polytechnic options after 10th. Ask me anything about streams, entrance exams, or career choices.`,
     },
   ])
   const [input, setInput] = useState('')
@@ -98,131 +89,123 @@ How can I assist your stream and education decisions today?`,
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b pb-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold mb-1">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Context-Aware AI Guidance</span>
+    <div className="bg-[#f8fafc] min-h-screen">
+      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-4xl space-y-6">
+
+        {/* Header */}
+        <div className="card-surface rounded-xl p-5 sm:p-6 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-0.5">AI Guidance</p>
+            <h1 className="text-xl font-bold text-slate-900">AI Career Counselor</h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Ask about streams, entrance exams, colleges, or career tradeoffs after 10th.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">AI Career Counselor</h1>
-          <p className="text-slate-500 text-xs sm:text-sm">
-            Trained on Indian post-10th educational pathways, entrance exams, and college choices.
-          </p>
+          <Link href="/dashboard">
+            <button className="btn-secondary text-xs px-4 py-2 shrink-0">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Dashboard
+            </button>
+          </Link>
         </div>
 
-        <Link href="/dashboard">
-          <Button variant="outline" size="sm" className="text-xs gap-1.5 font-semibold">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Dashboard
-          </Button>
-        </Link>
-      </div>
+        {/* Chat Box */}
+        <div className="card-surface rounded-xl bg-white overflow-hidden flex flex-col" style={{ height: '65vh' }}>
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+            {messages.map((m, idx) => (
+              <div
+                key={idx}
+                className={`flex items-start gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {m.role === 'assistant' && (
+                  <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                )}
 
-      {/* Main Chat Box */}
-      <Card className="border-slate-200 shadow-md flex flex-col h-[65vh] bg-white overflow-hidden">
-        {/* Messages Scroll Area */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          {messages.map((m, idx) => (
-            <div
-              key={idx}
-              className={`flex items-start gap-3 ${
-                m.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
-            >
-              {m.role === 'assistant' && (
-                <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                <div
+                  className={`px-4 py-3 rounded-2xl max-w-[85%] text-sm leading-relaxed ${
+                    m.role === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-50 text-slate-800 border border-slate-200 whitespace-pre-wrap'
+                  }`}
+                >
+                  {m.content}
+                </div>
+
+                {m.role === 'user' && (
+                  <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <User className="h-4 w-4" />
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0">
                   <Bot className="h-4 w-4" />
                 </div>
-              )}
-
-              <div
-                className={`p-4 rounded-2xl max-w-[85%] text-xs sm:text-sm leading-relaxed ${
-                  m.role === 'user'
-                    ? 'bg-blue-600 text-white rounded-tr-xs shadow-xs'
-                    : 'bg-slate-50 text-slate-800 border border-slate-200 rounded-tl-xs space-y-2 whitespace-pre-wrap'
-                }`}
-              >
-                {m.content}
-              </div>
-
-              {m.role === 'user' && (
-                <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 shadow-xs mt-0.5">
-                  <User className="h-4 w-4" />
+                <div className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-1.5">
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-blue-500 [animation-delay:0ms]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-blue-500 [animation-delay:150ms]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-blue-500 [animation-delay:300ms]" />
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            )}
 
-          {loading && (
-            <div className="flex items-start gap-3 justify-start">
-              <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0">
-                <Bot className="h-4 w-4" />
-              </div>
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
-                <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600" />
-                <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:0.2s]" />
-                <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:0.4s]" />
-                <span>Analyzing streams and options...</span>
-              </div>
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Starter suggestions */}
+          {messages.length <= 2 && (
+            <div className="px-4 py-3 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-1.5">
+              <span className="text-[11px] font-semibold text-slate-400 w-full mb-0.5">Try asking:</span>
+              {STARTER_PROMPTS.map((prompt, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleSend(prompt)}
+                  className="text-[11px] bg-white border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-700 px-2.5 py-1 rounded-full transition-colors truncate max-w-full"
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+          {/* Input bar */}
+          <div className="p-3 sm:p-4 border-t border-slate-100 bg-white">
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleSend() }}
+              className="flex gap-2"
+            >
+              <Input
+                placeholder="Ask about streams, exams, colleges, or careers..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                disabled={loading}
+                className="bg-slate-50 border-slate-200 text-sm h-10 flex-1"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || loading}
+                className="btn-primary px-4 h-10 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+          </div>
         </div>
 
-        {/* Starter Chips */}
-        {messages.length <= 2 && (
-          <div className="px-4 py-2 border-t bg-slate-50/50 flex flex-wrap gap-1.5">
-            <span className="text-[11px] font-bold text-slate-500 block w-full mb-0.5">Suggested Questions:</span>
-            {STARTER_PROMPTS.map((prompt, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handleSend(prompt)}
-                className="text-[11px] bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-600 px-2.5 py-1 rounded-full transition truncate max-w-full"
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Chat Input Bar */}
-        <CardFooter className="p-3 sm:p-4 border-t bg-white">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleSend()
-            }}
-            className="flex w-full gap-2"
-          >
-            <Input
-              placeholder="Ask a question about streams, marks, colleges, or careers..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={loading}
-              className="bg-slate-50 border-slate-200 text-xs sm:text-sm h-11"
-            />
-            <Button
-              type="submit"
-              disabled={!input.trim() || loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 h-11 shrink-0 gap-1.5 text-xs font-semibold shadow-xs"
-            >
-              <span>Send</span>
-              <Send className="h-3.5 w-3.5" />
-            </Button>
-          </form>
-        </CardFooter>
-      </Card>
-
-      {/* Guidance Notice */}
-      <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 flex items-center gap-2">
-        <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />
-        <span>
-          AI responses provide structured educational information and should be used to support discussions with parents and school counselors.
-        </span>
+        {/* Notice */}
+        <div className="notice-amber">
+          <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+          <span>
+            AI responses are for educational guidance. Discuss important decisions with your parents, teachers, and school counselors.
+          </span>
+        </div>
       </div>
     </div>
   )

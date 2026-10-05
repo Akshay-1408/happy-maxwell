@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, DM_Sans } from 'next/font/google'
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Header } from '@/components/layout/header'
@@ -7,24 +7,24 @@ import { Footer } from '@/components/layout/footer'
 import { ToastProvider } from '@/components/ui/toaster'
 import { SmoothScrollProvider } from '@/components/providers/smooth-scroll-provider'
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-jakarta',
   display: 'swap',
 })
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-dm',
-  display: 'swap',
-})
-
 export const metadata: Metadata = {
-  title: 'SmartCareer — AI-Assisted Career Counseling After 10th Standard',
+  title: 'SmartCareer — AI Career Guidance for 10th Standard Students',
   description:
-    'Discover the right education stream and career path after 10th standard based on academic performance, subject interests, aptitude, and goals.',
+    'Find the right stream and career path after 10th standard. Data-backed guidance based on your marks, interests, and goals.',
 }
 
 export default function RootLayout({
@@ -36,21 +36,23 @@ export default function RootLayout({
     <ClerkProvider
       appearance={{
         variables: {
-          colorPrimary: '#6366f1',
-          colorBackground: '#0e111a',
-          colorText: '#f1f5f9',
-          colorInputBackground: '#08090d',
-          colorInputText: '#ffffff',
-          borderRadius: '0.75rem',
+          colorPrimary: '#2563eb',
+          colorBackground: '#ffffff',
+          colorText: '#0f172a',
+          colorInputBackground: '#f8fafc',
+          colorInputText: '#0f172a',
+          borderRadius: '0.625rem',
         },
       }}
     >
-      <html lang="en" className={`${plusJakartaSans.variable} ${dmSans.variable} dark`}>
-        <body className={`${plusJakartaSans.className} antialiased bg-[#090a0f] text-slate-100 selection:bg-indigo-500/30 selection:text-indigo-200`}>
+      <html lang="en" className={`${inter.variable} ${plusJakartaSans.variable}`}>
+        <body
+          className={`${inter.className} antialiased bg-[#f8fafc] text-slate-900 selection:bg-blue-100 selection:text-blue-900`}
+        >
           <SmoothScrollProvider>
-            <div className="flex min-h-screen flex-col bg-[#090a0f] text-slate-100 relative">
+            <div className="flex min-h-screen flex-col bg-[#f8fafc]">
               <Header />
-              <main className="flex-1 relative z-10">{children}</main>
+              <main className="flex-1">{children}</main>
               <Footer />
             </div>
             <ToastProvider />

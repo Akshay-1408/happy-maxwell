@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { QuestionCard } from '@/components/assessment/question-card'
 import { ProgressIndicator } from '@/components/assessment/progress-indicator'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles, AlertCircle, LayoutGrid, Check } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, LayoutGrid, Check } from 'lucide-react'
 
 export default function AssessmentPage() {
   const router = useRouter()
@@ -94,22 +93,22 @@ export default function AssessmentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-        <p className="text-sm text-slate-600 font-medium">Loading 30-Question Career & Stream Assessment...</p>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-slate-200 border-t-blue-600" />
+        <p className="text-sm text-slate-500">Loading questions...</p>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center max-w-md">
-        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-3" />
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Something went wrong</h2>
-        <p className="text-slate-600 text-sm mb-6">{error}</p>
-        <Button onClick={() => window.location.reload()} className="bg-blue-600 hover:bg-blue-700">
+      <div className="container mx-auto px-4 py-20 text-center max-w-md">
+        <AlertCircle className="h-10 w-10 text-slate-300 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-slate-900 mb-2">Something went wrong</h2>
+        <p className="text-slate-500 text-sm mb-6">{error}</p>
+        <button onClick={() => window.location.reload()} className="btn-primary">
           Try Again
-        </Button>
+        </button>
       </div>
     )
   }
@@ -121,15 +120,14 @@ export default function AssessmentPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
-      {/* Assessment Header */}
+      {/* Header */}
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
-          <Sparkles className="h-3.5 w-3.5" />
-          <span>Post-10th Stream & Career Assessment</span>
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Career Alignment Test</h1>
-        <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto">
-          Assess your interest, aptitude, personality, and career scenarios to find your best stream after 10th.
+        <span className="badge-blue">
+          Post-10th Stream Assessment
+        </span>
+        <h1 className="text-display text-2xl sm:text-3xl text-slate-900">Stream & Career Assessment</h1>
+        <p className="text-sm text-slate-500 max-w-lg mx-auto">
+          Answer 30 questions about your interests, aptitude, and goals. Takes about 10 minutes.
         </p>
       </div>
 
@@ -199,48 +197,46 @@ export default function AssessmentPage() {
         />
       )}
 
-      {/* Navigation Buttons */}
+      {/* Navigation */}
       <div className="flex items-center justify-between max-w-2xl mx-auto pt-2">
-        <Button
-          variant="outline"
+        <button
           onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
           disabled={currentIndex === 0 || submitting}
-          className="gap-2 text-xs"
+          className="btn-secondary text-xs px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ArrowLeft className="h-4 w-4" />
           Previous
-        </Button>
+        </button>
 
         <div className="flex items-center gap-2">
           {answeredCount >= 10 && !isLastQuestion && (
-            <Button
-              variant="ghost"
+            <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="text-xs text-slate-600 hover:text-blue-600"
+              className="btn-ghost text-xs text-slate-500 hover:text-blue-600"
             >
-              Submit Early ({answeredCount}/{questions.length})
-            </Button>
+              Submit early ({answeredCount}/{questions.length})
+            </button>
           )}
 
           {isLastQuestion ? (
-            <Button
+            <button
               onClick={handleSubmit}
               disabled={submitting || answeredCount < 5}
-              className="bg-blue-600 hover:bg-blue-700 gap-2 font-bold text-xs sm:text-sm shadow-md"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Generating Career Profile...' : 'Submit & View Guidance Report'}
+              {submitting ? 'Generating results...' : 'Submit & View Results'}
               <CheckCircle2 className="h-4 w-4" />
-            </Button>
+            </button>
           ) : (
-            <Button
+            <button
               onClick={() => setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))}
               disabled={submitting}
-              className="bg-blue-600 hover:bg-blue-700 gap-2 text-xs font-semibold"
+              className="btn-primary"
             >
               Next
               <ArrowRight className="h-4 w-4" />
-            </Button>
+            </button>
           )}
         </div>
       </div>
