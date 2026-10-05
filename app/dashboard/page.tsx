@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
 import { GsapReveal } from '@/components/animations/gsap-reveal'
-import { Spotlight } from '@/components/animations/spotlight'
+
 import {
   GraduationCap,
   ArrowRight,
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         {/* Welcome Banner */}
         <GsapReveal animation="fade-up" duration={0.7}>
           <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#121629] via-[#0f121e] to-[#141026] p-6 sm:p-8 shadow-2xl shadow-black/50">
-            <Spotlight fill="rgba(99, 102, 241, 0.18)" />
+
 
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div className="space-y-2 max-w-xl">
@@ -403,8 +403,8 @@ export default function DashboardPage() {
                         key={g.id}
                         onClick={() => toggleGoal(g.id, g.completed)}
                         className={`p-2.5 rounded-xl border text-xs flex items-start gap-2.5 cursor-pointer transition select-none ${g.completed
-                            ? 'bg-slate-900/50 border-white/[0.04] text-slate-500 line-through'
-                            : 'bg-[#0b0e18] border-white/[0.08] text-slate-200 hover:border-indigo-500/40'
+                          ? 'bg-slate-900/50 border-white/[0.04] text-slate-500 line-through'
+                          : 'bg-[#0b0e18] border-white/[0.08] text-slate-200 hover:border-indigo-500/40'
                           }`}
                       >
                         {g.completed ? (
