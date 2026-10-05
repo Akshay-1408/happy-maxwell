@@ -77,12 +77,12 @@ const streams = [
 ]
 
 const colorMap: Record<string, { bg: string; text: string; border: string; tag: string }> = {
-  blue:    { bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200',   tag: 'bg-blue-50 text-blue-600 border-blue-200' },
-  emerald: { bg: 'bg-emerald-50',text: 'text-emerald-700',border: 'border-emerald-200',tag: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
-  violet:  { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', tag: 'bg-violet-50 text-violet-600 border-violet-200' },
-  amber:   { bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-amber-200',  tag: 'bg-amber-50 text-amber-600 border-amber-200' },
-  rose:    { bg: 'bg-rose-50',   text: 'text-rose-700',   border: 'border-rose-200',   tag: 'bg-rose-50 text-rose-600 border-rose-200' },
-  cyan:    { bg: 'bg-cyan-50',   text: 'text-cyan-700',   border: 'border-cyan-200',   tag: 'bg-cyan-50 text-cyan-600 border-cyan-200' },
+  blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', tag: 'bg-blue-50 text-blue-600 border-blue-200' },
+  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', tag: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
+  violet: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', tag: 'bg-violet-50 text-violet-600 border-violet-200' },
+  amber: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', tag: 'bg-amber-50 text-amber-600 border-amber-200' },
+  rose: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', tag: 'bg-rose-50 text-rose-600 border-rose-200' },
+  cyan: { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200', tag: 'bg-cyan-50 text-cyan-600 border-cyan-200' },
 }
 
 const features = [
@@ -136,10 +136,10 @@ const faqs = [
 ]
 
 const stats = [
-  { value: '30+', label: 'Career Paths Covered',   icon: Target },
-  { value: '20+', label: 'Top Colleges Listed',    icon: Building2 },
-  { value: '6',   label: 'Stream Guides Available', icon: Compass },
-  { value: '100%', label: 'Free for Students',     icon: Award },
+  { value: '30+', label: 'Career Paths Covered', icon: Target },
+  { value: '20+', label: 'Top Colleges Listed', icon: Building2 },
+  { value: '6', label: 'Stream Guides Available', icon: Compass },
+  { value: '100%', label: 'Free for Students', icon: Award },
 ]
 
 const howItWorks = [
@@ -161,10 +161,10 @@ export default function LandingPage() {
     const ctx = gsap.context(() => {
       gsap.from('.hero-badge', { y: 16, opacity: 0, duration: 0.5, ease: 'power2.out' })
       gsap.from('.hero-headline', { y: 30, opacity: 0, duration: 0.7, delay: 0.1, ease: 'power3.out' })
-      gsap.from('.hero-sub',      { y: 20, opacity: 0, duration: 0.6, delay: 0.25, ease: 'power2.out' })
-      gsap.from('.hero-cta',      { y: 16, opacity: 0, duration: 0.5, delay: 0.38, ease: 'power2.out' })
-      gsap.from('.hero-trust',    { y: 12, opacity: 0, duration: 0.5, delay: 0.5,  ease: 'power2.out' })
-      gsap.from('.hero-card',     { y: 24, opacity: 0, duration: 0.8, delay: 0.2,  ease: 'power3.out' })
+      gsap.from('.hero-sub', { y: 20, opacity: 0, duration: 0.6, delay: 0.25, ease: 'power2.out' })
+      gsap.from('.hero-cta', { y: 16, opacity: 0, duration: 0.5, delay: 0.38, ease: 'power2.out' })
+      gsap.from('.hero-trust', { y: 12, opacity: 0, duration: 0.5, delay: 0.5, ease: 'power2.out' })
+      gsap.from('.hero-card', { y: 24, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' })
     }, el)
 
     return () => ctx.revert()
@@ -258,10 +258,10 @@ export default function LandingPage() {
                 {/* Scoring bars */}
                 <div className="space-y-3.5">
                   {[
-                    { label: '10th Marks',        value: 'Math 88%, Science 92%',   pct: 88, color: 'bg-blue-500' },
-                    { label: 'Subject Interest',   value: 'Coding & Physics',        pct: 92, color: 'bg-blue-600' },
-                    { label: 'Career Goals',       value: 'Tech / Software',         pct: 85, color: 'bg-blue-400' },
-                    { label: 'Personality Fit',    value: 'Analytical & Structured', pct: 78, color: 'bg-slate-400' },
+                    { label: '10th Marks', value: 'Math 88%, Science 92%', pct: 88, color: 'bg-blue-500' },
+                    { label: 'Subject Interest', value: 'Coding & Physics', pct: 92, color: 'bg-blue-600' },
+                    { label: 'Career Goals', value: 'Tech / Software', pct: 85, color: 'bg-blue-400' },
+                    { label: 'Personality Fit', value: 'Analytical & Structured', pct: 78, color: 'bg-slate-400' },
                   ].map((item) => (
                     <div key={item.label} className="space-y-1">
                       <div className="flex justify-between text-xs">
